@@ -1,0 +1,8 @@
+
+{
+  "name": "SpotiFinance",
+  "description": "A personal finance manager with a Spotify-inspired UI and an integrated AI assistant for smart expense tracking and analysis.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
