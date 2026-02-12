@@ -43,6 +43,38 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
     return transactions.filter(t => t.date === selectedDate);
   }, [transactions, selectedDate]);
 
+  // 月度消费分类统计
+  const categoryStats = useMemo(() => {
+    const monthStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+    const monthly = transactions.filter(t => t.date.startsWith(monthStr) && t.type === 'expense');
+    const categories = ['Food', 'Shopping', 'Transport', 'Entertainment', 'Social'];
+    return categories.map(cat => ({
+      name: cat,
+      amount: monthly.filter(t => t.category === cat).reduce((s, t) => s + t.amount, 0),
+      count: monthly.filter(t => t.category === cat).length
+    })).filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount);
+  }, [transactions, currentYear, currentMonth]);
+
+  // 本月最大消费
+  const topExpenses = useMemo(() => {
+    const monthStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+    return transactions
+      .filter(t => t.date.startsWith(monthStr) && t.type === 'expense')
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [transactions, currentYear, currentMonth]);
+
+  // 消费天数统计
+  const spendingDays = useMemo(() => {
+    const monthStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+    const uniqueDays = new Set(
+      transactions
+        .filter(t => t.date.startsWith(monthStr) && t.type === 'expense')
+        .map(t => t.date)
+    );
+    return uniqueDays.size;
+  }, [transactions, currentYear, currentMonth]);
+
   return (
     <div ref={containerRef} className="space-y-6 px-5 pt-6 pb-20 min-h-screen">
       <header className="flex justify-between items-center">
@@ -100,6 +132,93 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* 月度分类统计 */}
+      {categoryStats.length > 0 && (
+        <div className="bg-custom-surface p-6 rounded-[32px] border border-custom-subtle shadow-xl">
+          <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
+            <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+            <span>本月消费分布</span>
+          </h3>
+          <div className="space-y-3">
+            {categoryStats.map((cat, idx) => (
+              <div key={cat.name} className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-bold text-white">{cat.name}</span>
+                    <span className="text-xs font-black text-custom-dim">{cat.count} 笔</span>
+                  </div>
+                  <div className="h-2 bg-custom-elevated rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] transition-all duration-500"
+                      style={{ width: `${(cat.amount / categoryStats[0].amount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-base font-black text-white">¥{cat.amount.toLocaleString()}</div>
+                  <div className="text-[9px] font-black text-custom-dim">
+                    {Math.round((cat.amount / stats.exp) * 100)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 本月消费排行 */}
+      {topExpenses.length > 0 && (
+        <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-6 rounded-[32px] border border-white/10 shadow-xl">
+          <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
+            <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span>本月消费 TOP {topExpenses.length}</span>
+          </h3>
+          <div className="space-y-2">
+            {topExpenses.map((t, idx) => (
+              <div key={t.id} className="flex items-center space-x-3 p-3 bg-custom-surface/50 rounded-2xl hover:bg-custom-surface transition-all">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${
+                  idx === 0 ? 'bg-[#FFD700] text-black' :
+                  idx === 1 ? 'bg-[#C0C0C0] text-black' :
+                  idx === 2 ? 'bg-[#CD7F32] text-black' :
+                  'bg-custom-elevated text-custom-dim'
+                }`}>
+                  {idx + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold text-sm text-white">{t.description}</div>
+                  <div className="text-[10px] text-custom-dim font-black">{t.date} · {t.category}</div>
+                </div>
+                <div className="text-base font-black text-white">¥{t.amount.toLocaleString()}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 月度统计摘要 */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+          <div className="text-2xl font-black text-[#1DB954]">{spendingDays}</div>
+          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">消费天数</div>
+        </div>
+        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+          <div className="text-2xl font-black text-white">
+            {stats.exp > 0 ? Math.round(stats.exp / spendingDays) : 0}
+          </div>
+          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">日均消费</div>
+        </div>
+        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+          <div className="text-2xl font-black text-white">
+            {transactions.filter(t => t.date.startsWith(`${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`) && t.type === 'expense').length}
+          </div>
+          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">总笔数</div>
         </div>
       </div>
 
