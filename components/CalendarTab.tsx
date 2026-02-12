@@ -80,7 +80,9 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
       <header className="flex justify-between items-center">
         <div className="animate-in fade-in slide-in-from-left duration-500">
           <h1 className="text-4xl font-black tracking-tighter">{t('footprint')}</h1>
-          <p className="text-[10px] text-custom-dim font-black uppercase tracking-[0.4em] mt-1 text-[#1DB954]">{monthNames[currentMonth]} {currentYear}</p>
+          <p className="text-[10px] text-custom-dim font-black uppercase tracking-[0.4em] mt-0.5 text-[#1DB954]">
+            {spendingDays > 0 ? `${spendingDays}天剁手记录` : '还没开始花钱'}
+          </p>
         </div>
         <div className="flex space-x-2 bg-custom-elevated p-1 rounded-full">
            <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} className="w-8 h-8 hover:text-[#1DB954] transition-colors flex items-center justify-center">
@@ -93,12 +95,16 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
       </header>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-5 rounded-3xl border border-custom-subtle shadow-xl group">
-          <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-[#1DB954] transition-colors">{t('income')}</div>
+        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-4 rounded-2xl border border-custom-subtle shadow-xl group">
+          <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-[#1DB954] transition-colors">
+            {stats.inc > 0 ? '进账了' : '没进账'}
+          </div>
           <div className="text-[#1DB954] text-xl font-black">+¥{stats.inc.toLocaleString()}</div>
         </div>
-        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-5 rounded-3xl border border-custom-subtle shadow-xl group">
-          <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">{t('expense')}</div>
+        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-4 rounded-2xl border border-custom-subtle shadow-xl group">
+          <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">
+            {stats.exp > 0 ? '出血了' : '没花钱'}
+          </div>
           <div className="text-white text-xl font-black">-¥{stats.exp.toLocaleString()}</div>
         </div>
       </div>
@@ -137,12 +143,12 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
 
       {/* 月度分类统计 */}
       {categoryStats.length > 0 && (
-        <div className="bg-custom-surface p-6 rounded-[32px] border border-custom-subtle shadow-xl">
-          <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
-            <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+        <div className="bg-custom-surface p-5 rounded-[28px] border border-custom-subtle shadow-xl">
+          <h3 className="text-base font-black mb-3 flex items-center space-x-2">
+            <svg className="w-4 h-4 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
             </svg>
-            <span>本月消费分布</span>
+            <span>钱都花哪了</span>
           </h3>
           <div className="space-y-3">
             {categoryStats.map((cat, idx) => (
@@ -173,12 +179,12 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
 
       {/* 本月消费排行 */}
       {topExpenses.length > 0 && (
-        <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-6 rounded-[32px] border border-white/10 shadow-xl">
-          <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
-            <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+        <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-5 rounded-[28px] border border-white/10 shadow-xl">
+          <h3 className="text-base font-black mb-3 flex items-center space-x-2">
+            <svg className="w-4 h-4 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            <span>本月消费 TOP {topExpenses.length}</span>
+            <span>大手笔排行榜</span>
           </h3>
           <div className="space-y-2">
             {topExpenses.map((t, idx) => (
@@ -204,21 +210,21 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
 
       {/* 月度统计摘要 */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+        <div className="bg-custom-surface p-3 rounded-xl border border-custom-subtle text-center">
           <div className="text-2xl font-black text-[#1DB954]">{spendingDays}</div>
-          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">消费天数</div>
+          <div className="text-[8px] font-black text-custom-dim uppercase tracking-wider mt-0.5">剁手天数</div>
         </div>
-        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+        <div className="bg-custom-surface p-3 rounded-xl border border-custom-subtle text-center">
           <div className="text-2xl font-black text-white">
-            {stats.exp > 0 ? Math.round(stats.exp / spendingDays) : 0}
+            {stats.exp > 0 && spendingDays > 0 ? Math.round(stats.exp / spendingDays) : 0}
           </div>
-          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">日均消费</div>
+          <div className="text-[8px] font-black text-custom-dim uppercase tracking-wider mt-0.5">日均烧钱</div>
         </div>
-        <div className="bg-custom-surface p-4 rounded-2xl border border-custom-subtle text-center">
+        <div className="bg-custom-surface p-3 rounded-xl border border-custom-subtle text-center">
           <div className="text-2xl font-black text-white">
             {transactions.filter(t => t.date.startsWith(`${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`) && t.type === 'expense').length}
           </div>
-          <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mt-1">总笔数</div>
+          <div className="text-[8px] font-black text-custom-dim uppercase tracking-wider mt-0.5">出手次数</div>
         </div>
       </div>
 

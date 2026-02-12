@@ -98,6 +98,33 @@ export const generateSpendingInsight = async (transactions: Transaction[]) => {
   ]);
 };
 
+export const generateFunnySpendingJokes = async (transactions: Transaction[]) => {
+  if (!API_KEY) {
+    return [
+      { title: "钱包守护神", content: "你的钱包比你还懂节制", emoji: "🛡️" },
+      { title: "隐形富豪", content: "账户余额和心情成反比", emoji: "💸" }
+    ];
+  }
+
+  const prompt = `基于交易数据 ${JSON.stringify(transactions.slice(-20))}，生成3条幽默消费段子。
+每条必须：
+- title: 4-6字的梗标题
+- content: 12-18字的犀利吐槽，要有网络梗和年轻人的语言风格
+- emoji: 一个合适的emoji
+
+只返回JSON数组，格式: [{"title":"","content":"","emoji":""}]`;
+
+  try {
+    const result = await callDeepSeek([{ role: "user", content: prompt }]);
+    return JSON.parse(result);
+  } catch {
+    return [
+      { title: "月光战士", content: "工资到账三秒，钱包开始冬眠", emoji: "🌙" },
+      { title: "外卖续命", content: "外卖小哥比亲妈还熟", emoji: "🍱" }
+    ];
+  }
+};
+
 export const scanBillImage = async (base64Data: string) => {
   if (!API_KEY) {
     console.error("DeepSeek API 密钥未配置");

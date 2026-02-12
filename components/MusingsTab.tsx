@@ -59,18 +59,18 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
   }, [transactions]);
 
   const moodCards = [
-    { title: language === 'zh' ? '深夜剁手' : 'Late Shopping', color: 'bg-[#E13300]', icon: '🌙', prompt: 'Analysis late night spending' },
-    { title: language === 'zh' ? '工资日狂欢' : 'Payday Party', color: 'bg-[#1E3264]', icon: '💰', prompt: 'Analyze payday spending' },
-    { title: language === 'zh' ? '省钱大作战' : 'Saving Mode', color: 'bg-[#F037A5]', icon: '🛡️', prompt: 'How to save more' },
-    { title: language === 'zh' ? '外卖之魂' : 'Foodie Soul', color: 'bg-[#006450]', icon: '🍱', prompt: 'Analyze food delivery frequency' },
+    { title: language === 'zh' ? '深夜剁手党' : 'Late Shopping', color: 'bg-[#E13300]', icon: '🌙', prompt: 'Analysis late night spending', subtitle: '夜深人静钱包空' },
+    { title: language === 'zh' ? '发薪日狂欢' : 'Payday Party', color: 'bg-[#1E3264]', icon: '💰', prompt: 'Analyze payday spending', subtitle: '工资秒光速度' },
+    { title: language === 'zh' ? '省钱修行僧' : 'Saving Mode', color: 'bg-[#F037A5]', icon: '🛡️', prompt: 'How to save more', subtitle: '抠门是种美德' },
+    { title: language === 'zh' ? '外卖续命侠' : 'Foodie Soul', color: 'bg-[#006450]', icon: '🍱', prompt: 'Analyze food delivery frequency', subtitle: '骑手都认识你' },
   ];
 
   return (
-    <div ref={containerRef} className="space-y-5 px-5 pt-8 pb-20 bg-gradient-to-b from-[#1a1a1a] to-[#121212]">
-      <header className="flex justify-between items-center mb-2">
+    <div ref={containerRef} className="space-y-3 px-5 pt-8 pb-20 bg-gradient-to-b from-[#1a1a1a] to-[#121212]">
+      <header className="flex justify-between items-center mb-1">
         <div>
           <h1 className="text-4xl font-black tracking-tighter">{t('discover')}</h1>
-          <p className="text-[10px] text-[#1DB954] font-black uppercase tracking-[0.3em] mt-1">AI Powered Insights</p>
+          <p className="text-[10px] text-[#1DB954] font-black uppercase tracking-[0.3em] mt-0.5">你的AI财务搭子</p>
         </div>
         <button onClick={fetchData} disabled={loading} className="w-12 h-12 bg-[#1DB954]/10 hover:bg-[#1DB954]/20 rounded-full flex items-center justify-center border border-[#1DB954]/30 shadow-lg active:scale-90 transition-all">
           <svg className={`w-6 h-6 text-[#1DB954] ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -117,72 +117,75 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {moodCards.map((item) => (
-          <button key={item.title} onClick={() => onSelectMood?.(item.prompt)} className={`${item.color} h-32 rounded-[24px] p-5 relative group overflow-hidden text-left shadow-[0_8px_30px_rgba(0,0,0,0.4)] active:scale-95 transition-all border border-white/10 hover:border-white/20`}>
+          <button key={item.title} onClick={() => onSelectMood?.(item.prompt)} className={`${item.color} h-28 rounded-[20px] p-4 relative group overflow-hidden text-left shadow-[0_8px_30px_rgba(0,0,0,0.4)] active:scale-95 transition-all border border-white/10 hover:border-white/20`}>
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <span className="text-xl font-black leading-tight text-white relative z-10 drop-shadow-lg">{item.title}</span>
-            <div className="absolute -right-3 -bottom-3 text-7xl opacity-30 rotate-[15deg] group-hover:scale-110 group-hover:rotate-[20deg] transition-all duration-300">{item.icon}</div>
+            <span className="text-lg font-black leading-tight text-white relative z-10 drop-shadow-lg">{item.title}</span>
+            <span className="text-[9px] font-bold text-white/70 relative z-10 block mt-0.5">{item.subtitle}</span>
+            <div className="absolute -right-2 -bottom-2 text-6xl opacity-30 rotate-[15deg] group-hover:scale-110 group-hover:rotate-[20deg] transition-all duration-300">{item.icon}</div>
           </button>
         ))}
       </div>
 
       {/* 数据统计卡片 */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-[#1DB954]/20 to-[#1DB954]/5 p-5 rounded-[24px] border border-[#1DB954]/30 shadow-lg">
-          <div className="text-[10px] font-black text-[#1DB954] uppercase tracking-wider mb-2">总结余</div>
-          <div className="text-3xl font-black text-white">¥{stats.balance.toLocaleString()}</div>
-          <div className="text-[9px] text-white/60 font-bold mt-1">
-            {stats.income > 0 ? `收入 ¥${stats.income.toLocaleString()}` : '暂无收入'}
+        <div className="bg-gradient-to-br from-[#1DB954]/20 to-[#1DB954]/5 p-4 rounded-[20px] border border-[#1DB954]/30 shadow-lg">
+          <div className="text-[9px] font-black text-[#1DB954] uppercase tracking-wider mb-1">
+            {stats.balance > 0 ? '还有余粮' : '已经见底'}
+          </div>
+          <div className="text-2xl font-black text-white">¥{stats.balance.toLocaleString()}</div>
+          <div className="text-[8px] text-white/60 font-bold mt-0.5">
+            {stats.income > 0 ? `进账 ¥${stats.income.toLocaleString()}` : '等待回血'}
           </div>
         </div>
-        <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 p-5 rounded-[24px] border border-red-500/30 shadow-lg">
-          <div className="text-[10px] font-black text-red-400 uppercase tracking-wider mb-2">总支出</div>
-          <div className="text-3xl font-black text-white">¥{stats.expense.toLocaleString()}</div>
-          <div className="text-[9px] text-white/60 font-bold mt-1">
-            {stats.transactionCount} 笔交易
+        <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 p-4 rounded-[20px] border border-red-500/30 shadow-lg">
+          <div className="text-[9px] font-black text-red-400 uppercase tracking-wider mb-1">花钱如流水</div>
+          <div className="text-2xl font-black text-white">¥{stats.expense.toLocaleString()}</div>
+          <div className="text-[8px] text-white/60 font-bold mt-0.5">
+            {stats.transactionCount} 次出血
           </div>
         </div>
       </div>
 
       {/* 消费习惯分析 */}
-      <div className="bg-custom-surface p-6 rounded-[32px] border border-custom-subtle shadow-xl">
-        <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
-          <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+      <div className="bg-custom-surface p-5 rounded-[28px] border border-custom-subtle shadow-xl">
+        <h3 className="text-base font-black mb-3 flex items-center space-x-2">
+          <svg className="w-4 h-4 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
             <path d="M9 2a1 1 0 0 0-1 1v1H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4V3a1 1 0 1 0-2 0v1H9V3a1 1 0 0 0-1-1zm11 4v14H4V6h16z"/>
           </svg>
-          <span>消费习惯</span>
+          <span>你的消费画像</span>
         </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-custom-elevated p-4 rounded-2xl">
-            <div className="text-[10px] font-black text-custom-dim uppercase tracking-wider mb-2">最爱分类</div>
-            <div className="text-2xl font-black text-[#1DB954]">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-custom-elevated p-3 rounded-xl">
+            <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mb-1">真爱是</div>
+            <div className="text-xl font-black text-[#1DB954]">
               {stats.topCategory ? stats.topCategory[0] : '-'}
             </div>
-            <div className="text-[9px] text-custom-dim font-bold mt-1">
-              {stats.topCategory ? `${stats.topCategory[1]} 次` : '暂无数据'}
+            <div className="text-[8px] text-custom-dim font-bold mt-0.5">
+              {stats.topCategory ? `剁了 ${stats.topCategory[1]} 次手` : '还没开始'}
             </div>
           </div>
-          <div className="bg-custom-elevated p-4 rounded-2xl">
-            <div className="text-[10px] font-black text-custom-dim uppercase tracking-wider mb-2">平均消费</div>
-            <div className="text-2xl font-black text-white">
+          <div className="bg-custom-elevated p-3 rounded-xl">
+            <div className="text-[9px] font-black text-custom-dim uppercase tracking-wider mb-1">出手阔绰度</div>
+            <div className="text-xl font-black text-white">
               ¥{stats.avgExpense}
             </div>
-            <div className="text-[9px] text-custom-dim font-bold mt-1">
-              每笔平均
+            <div className="text-[8px] text-custom-dim font-bold mt-0.5">
+              单笔战斗力
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-7 rounded-[32px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center space-x-2 mb-4">
+      <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-5 rounded-[28px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center space-x-2 mb-3">
           <svg className="w-4 h-4 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
-          <h3 className="text-xs font-black text-white/80 uppercase tracking-[0.3em]">{t('insights')}</h3>
+          <h3 className="text-xs font-black text-white/80 uppercase tracking-[0.3em]">AI碎碎念</h3>
         </div>
-        {loading ? <div className="h-24 animate-pulse bg-white/5 rounded-2xl" /> : <p className="text-base font-medium leading-relaxed text-white/90">{insight}</p>}
+        {loading ? <div className="h-20 animate-pulse bg-white/5 rounded-2xl" /> : <p className="text-sm font-medium leading-relaxed text-white/90">{insight}</p>}
       </div>
     </div>
   );
