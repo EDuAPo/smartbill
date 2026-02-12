@@ -38,6 +38,26 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
     fetchData();
   }, [transactions]);
 
+  // 计算统计数据
+  const stats = React.useMemo(() => {
+    const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const balance = income - expense;
+    const transactionCount = transactions.length;
+    
+    // 最常消费的分类
+    const categoryCount: Record<string, number> = {};
+    transactions.filter(t => t.type === 'expense').forEach(t => {
+      categoryCount[t.category] = (categoryCount[t.category] || 0) + 1;
+    });
+    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
+    
+    // 平均每笔消费
+    const avgExpense = expense > 0 ? Math.round(expense / transactions.filter(t => t.type === 'expense').length) : 0;
+    
+    return { income, expense, balance, transactionCount, topCategory, avgExpense };
+  }, [transactions]);
+
   const moodCards = [
     { title: language === 'zh' ? '深夜剁手' : 'Late Shopping', color: 'bg-[#E13300]', icon: '🌙', prompt: 'Analysis late night spending' },
     { title: language === 'zh' ? '工资日狂欢' : 'Payday Party', color: 'bg-[#1E3264]', icon: '💰', prompt: 'Analyze payday spending' },
@@ -105,6 +125,54 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
             <div className="absolute -right-3 -bottom-3 text-7xl opacity-30 rotate-[15deg] group-hover:scale-110 group-hover:rotate-[20deg] transition-all duration-300">{item.icon}</div>
           </button>
         ))}
+      </div>
+
+      {/* 数据统计卡片 */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-br from-[#1DB954]/20 to-[#1DB954]/5 p-5 rounded-[24px] border border-[#1DB954]/30 shadow-lg">
+          <div className="text-[10px] font-black text-[#1DB954] uppercase tracking-wider mb-2">总结余</div>
+          <div className="text-3xl font-black text-white">¥{stats.balance.toLocaleString()}</div>
+          <div className="text-[9px] text-white/60 font-bold mt-1">
+            {stats.income > 0 ? `收入 ¥${stats.income.toLocaleString()}` : '暂无收入'}
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 p-5 rounded-[24px] border border-red-500/30 shadow-lg">
+          <div className="text-[10px] font-black text-red-400 uppercase tracking-wider mb-2">总支出</div>
+          <div className="text-3xl font-black text-white">¥{stats.expense.toLocaleString()}</div>
+          <div className="text-[9px] text-white/60 font-bold mt-1">
+            {stats.transactionCount} 笔交易
+          </div>
+        </div>
+      </div>
+
+      {/* 消费习惯分析 */}
+      <div className="bg-custom-surface p-6 rounded-[32px] border border-custom-subtle shadow-xl">
+        <h3 className="text-lg font-black mb-4 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-[#1DB954]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 2a1 1 0 0 0-1 1v1H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4V3a1 1 0 1 0-2 0v1H9V3a1 1 0 0 0-1-1zm11 4v14H4V6h16z"/>
+          </svg>
+          <span>消费习惯</span>
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-custom-elevated p-4 rounded-2xl">
+            <div className="text-[10px] font-black text-custom-dim uppercase tracking-wider mb-2">最爱分类</div>
+            <div className="text-2xl font-black text-[#1DB954]">
+              {stats.topCategory ? stats.topCategory[0] : '-'}
+            </div>
+            <div className="text-[9px] text-custom-dim font-bold mt-1">
+              {stats.topCategory ? `${stats.topCategory[1]} 次` : '暂无数据'}
+            </div>
+          </div>
+          <div className="bg-custom-elevated p-4 rounded-2xl">
+            <div className="text-[10px] font-black text-custom-dim uppercase tracking-wider mb-2">平均消费</div>
+            <div className="text-2xl font-black text-white">
+              ¥{stats.avgExpense}
+            </div>
+            <div className="text-[9px] text-custom-dim font-bold mt-1">
+              每笔平均
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-gradient-to-br from-[#282828] to-[#181818] p-7 rounded-[32px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
