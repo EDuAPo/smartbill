@@ -100,6 +100,7 @@ export const generateSpendingInsight = async (transactions: Transaction[]) => {
 
 export const scanBillImage = async (base64Data: string) => {
   if (!API_KEY) {
+    console.error("DeepSeek API 密钥未配置");
     return null;
   }
 
@@ -124,24 +125,47 @@ export const scanBillImage = async (base64Data: string) => {
               },
               {
                 type: "text",
-                text: `识别此图片中的账单。严格返回 JSON。
+                text: `识别此图片中的账单信息。必须严格返回纯 JSON 格式，不要有任何其他文字。
 category 必须是以下之一: Food, Transport, Shopping, Utilities, Salary, Housing, Entertainment, Pets, Social, Subscription, Beauty。
 isExpense 为 true (支出) 或 false (收入)。
-格式: {"amount": 数字, "category": "类别", "description": "描述", "date": "YYYY-MM-DD", "isExpense": true/false}`
+返回格式: {"amount": 数字, "category": "类别", "description": "描述", "date": "YYYY-MM-DD", "isExpense": true/false}
+
+示例: {"amount": 45.5, "category": "Food", "description": "午餐", "date": "2026-02-12", "isExpense": true}`
               }
             ]
           }
-        ]
+        ],
+        temperature: 0.1
       })
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API 错误 ${response.status}:`, errorText);
       throw new Error(`API 错误: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.choices[0]?.message?.content || "{}";
-    return JSON.parse(content);
+    console.log("API 返回内容:", content);
+    
+    // 尝试提取 JSON（可能被包裹在其他文本中）
+    let jsonStr = content.trim();
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    const result = JSON.parse(jsonStr);
+    console.log("解析结果:", result);
+    
+    // 验证必需字段
+    if (!result.amount || !result.category || !result.description) {
+      console.error("返回数据缺少必需字段:", result);
+      return null;
+    }
+    
+    return result;
   } catch (error) {
     console.error("扫描错误:", error);
     return null;

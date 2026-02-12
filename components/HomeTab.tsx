@@ -18,6 +18,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState<'success' | 'error' | null>(null);
 
@@ -248,16 +249,27 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
       </div>
 
       <div className="bg-custom-surface rounded-[40px] p-8 border border-custom-subtle shadow-lg relative overflow-visible">
-        <h2 className="text-lg font-black mb-12">{t('spending_distribution')}</h2>
+        <div className="flex justify-between items-center mb-12">
+          <h2 className="text-lg font-black">{t('spending_distribution')}</h2>
+          {selectedCategory && (
+            <button 
+              onClick={() => setSelectedCategory(null)}
+              className="text-xs font-black text-[#1DB954] uppercase tracking-wider hover:text-[#1ed760] transition-colors"
+            >
+              清除筛选
+            </button>
+          )}
+        </div>
         
         <div className="flex justify-between items-end h-40 px-2 relative">
            {chartData.map((bar, i) => (
-             <div 
+             <button 
                key={i} 
                className="flex flex-col items-center group w-12 relative"
                onMouseEnter={() => setHoveredBar(i)}
                onMouseLeave={() => setHoveredBar(null)}
                onTouchStart={() => setHoveredBar(i)}
+               onClick={() => setSelectedCategory(selectedCategory === bar.label ? null : bar.label)}
              >
                <div className={`absolute -top-12 left-1/2 -translate-x-1/2 transition-all duration-300 pointer-events-none z-30 ${hoveredBar === i ? 'opacity-100 -translate-y-2' : 'opacity-0 translate-y-2'}`}>
                   <div className="bg-custom-elevated border border-custom-subtle text-[#1DB954] text-[10px] font-black px-3 py-1.5 rounded-xl shadow-2xl whitespace-nowrap">
@@ -275,13 +287,41 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
                     }} 
                   />
                </div>
-               <span className={`text-[9px] font-black transition-colors ${hoveredBar === i ? 'text-[#1DB954]' : 'text-custom-dim'} uppercase tracking-tighter`}>
+               <span className={`text-[9px] font-black transition-colors ${selectedCategory === bar.label ? 'text-[#1DB954]' : hoveredBar === i ? 'text-[#1DB954]' : 'text-custom-dim'} uppercase tracking-tighter`}>
                  {bar.label}
                </span>
-             </div>
+             </button>
            ))}
         </div>
       </div>
+
+      {selectedCategory && (
+        <div className="bg-custom-surface rounded-[40px] p-6 border border-custom-subtle shadow-lg">
+          <h3 className="text-base font-black mb-4 text-[#1DB954]">{selectedCategory} 消费明细</h3>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {transactions
+              .filter(t => t.type === 'expense' && t.category === selectedCategory)
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-3 bg-custom-elevated rounded-2xl border border-custom-subtle hover:border-[#1DB954]/30 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-custom-surface flex items-center justify-center text-lg">
+                      💸
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-white">{t.description}</div>
+                      <div className="text-[10px] text-custom-dim font-black">{t.date}</div>
+                    </div>
+                  </div>
+                  <div className="text-white font-black text-sm">-¥{t.amount.toLocaleString()}</div>
+                </div>
+              ))}
+            {transactions.filter(t => t.type === 'expense' && t.category === selectedCategory).length === 0 && (
+              <div className="text-center py-8 text-custom-dim text-sm">暂无消费记录</div>
+            )}
+          </div>
+        </div>
+      )}
 
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
     </div>
