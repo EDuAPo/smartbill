@@ -21,9 +21,9 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ transactions, onDelete, t, lang
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#282828] to-custom-main">
-      <div className="space-y-6 px-5 pt-12 pb-24">
+      <div className="space-y-5 px-5 pt-10 pb-24">
         {/* Spotify "Playlist Cover" Header */}
-        <div className="flex flex-col items-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="flex flex-col items-center mb-6 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="relative w-48 h-48 bg-gradient-to-br from-[#1DB954] to-[#121212] rounded-lg flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] group overflow-hidden">
              <svg className="w-24 h-24 text-white/90 group-hover:scale-110 transition-transform duration-500" viewBox="0 0 24 24" fill="currentColor">
                 {/* 卡通机器人举铜钱吉祥物 */}
@@ -38,7 +38,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ transactions, onDelete, t, lang
              </svg>
              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <h1 className="text-4xl font-black tracking-tighter uppercase">{t('list')}</h1>
             <div className="flex items-center justify-center space-x-2 mt-2">
                <div className="w-5 h-5 rounded-full bg-[#1DB954] flex items-center justify-center text-[10px] text-black font-black">S</div>
@@ -48,7 +48,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ transactions, onDelete, t, lang
         </div>
 
         {/* Search Bar - Spotify Style */}
-        <div className="sticky top-4 z-20 mb-8">
+        <div className="sticky top-4 z-20 mb-5">
           <div className="relative">
             <input 
               type="text"

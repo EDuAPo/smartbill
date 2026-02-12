@@ -39,7 +39,7 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
   }, [transactions, selectedDate]);
 
   return (
-    <div className="space-y-8 px-5 pt-8 pb-20 min-h-screen">
+    <div className="space-y-6 px-5 pt-6 pb-20 min-h-screen">
       <header className="flex justify-between items-center">
         <div className="animate-in fade-in slide-in-from-left duration-500">
           <h1 className="text-4xl font-black tracking-tighter">{t('footprint')}</h1>
@@ -55,22 +55,22 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-6 rounded-[32px] border border-custom-subtle shadow-xl group">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-5 rounded-3xl border border-custom-subtle shadow-xl group">
           <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-[#1DB954] transition-colors">{t('income')}</div>
-          <div className="text-[#1DB954] text-2xl font-black">+¥{stats.inc.toLocaleString()}</div>
+          <div className="text-[#1DB954] text-xl font-black">+¥{stats.inc.toLocaleString()}</div>
         </div>
-        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-6 rounded-[32px] border border-custom-subtle shadow-xl group">
+        <div className="bg-gradient-to-br from-custom-surface to-custom-elevated p-5 rounded-3xl border border-custom-subtle shadow-xl group">
           <div className="text-[9px] text-custom-dim font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">{t('expense')}</div>
-          <div className="text-white text-2xl font-black">-¥{stats.exp.toLocaleString()}</div>
+          <div className="text-white text-xl font-black">-¥{stats.exp.toLocaleString()}</div>
         </div>
       </div>
 
-      <div className="bg-custom-surface p-6 rounded-[40px] border border-custom-subtle shadow-2xl relative">
-        <div className="grid grid-cols-7 mb-4">
+      <div className="bg-custom-surface p-5 rounded-[40px] border border-custom-subtle shadow-2xl relative">
+        <div className="grid grid-cols-7 mb-3">
           {['S','M','T','W','T','F','S'].map(d => <div key={d} className="text-center text-[10px] font-black text-custom-dim">{d}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1.5">
           {blanks.map(b => <div key={`b-${b}`} className="aspect-square" />)}
           {days.map(d => {
             const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;

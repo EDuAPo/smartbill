@@ -90,14 +90,15 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
   }, []);
 
   const categories = ['Food', 'Shopping', 'Social', 'Pets', 'Entertainment'];
-  const chartData = categories.map(cat => {
+  const categoryColors = ['#FF4632', '#F59B23', '#1DB954', '#FF6437', '#AF2896'];
+  const chartData = categories.map((cat, idx) => {
     const amount = transactions.filter(t => t.type === 'expense' && t.category === cat).reduce((s, t) => s + t.amount, 0);
     const maxVal = Math.max(...categories.map(c => transactions.filter(t => t.type === 'expense' && t.category === c).reduce((s, t) => s + t.amount, 0)), 1);
-    return { label: cat, amount, val: (amount / maxVal) * 100 };
+    return { label: cat, amount, val: (amount / maxVal) * 100, color: categoryColors[idx] };
   });
 
   return (
-    <div className="space-y-8 px-5 pt-4 pb-10">
+    <div className="space-y-6 px-5 pt-4 pb-10">
       {isScanning && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex flex-col items-center justify-center">
           <div className="w-20 h-20 border-4 border-[#1DB954] border-t-transparent rounded-full animate-spin mb-4" />
@@ -157,7 +158,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
         </div>
       </header>
 
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         <div className="flex items-center space-x-2">
            <span className="text-[10px] font-black text-custom-dim uppercase tracking-widest">{t('balance')}</span>
            <div className={`px-2 py-0.5 rounded-full text-[8px] font-black flex items-center space-x-1 ${trendPercent > 0 ? 'bg-red-500/20 text-red-500' : 'bg-[#1DB954]/20 text-[#1DB954]'}`}>
@@ -181,13 +182,33 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
         </div>
       </div>
 
-      <div className="space-y-4 pt-4">
-        <div className="flex justify-between items-center text-[10px] font-black text-custom-dim uppercase tracking-widest">
-           <span>{t('budget')}</span>
-           <span className="text-[#1DB954] text-base font-black">¥{budget.toLocaleString()}</span>
+      <div className="space-y-3 pt-2">
+        <div className="bg-custom-surface p-5 rounded-3xl border border-custom-subtle shadow-lg">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[10px] font-black text-custom-dim uppercase tracking-widest">{t('budget')}</span>
+            <span className="text-[#1DB954] text-xl font-black">¥{budget.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-xs">
+            <div className="flex-1 h-2 bg-custom-elevated rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] transition-all duration-500"
+                style={{ width: `${Math.min((expense / budget) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-custom-dim font-black text-[10px]">
+              {budget > 0 ? Math.round((expense / budget) * 100) : 0}%
+            </span>
+          </div>
+          <div className="mt-2 text-[9px] text-custom-dim">
+            {budget > expense ? (
+              <span>还能花 <span className="text-[#1DB954] font-black">¥{(budget - expense).toLocaleString()}</span></span>
+            ) : (
+              <span className="text-red-500">超支 <span className="font-black">¥{(expense - budget).toLocaleString()}</span></span>
+            )}
+          </div>
         </div>
         
-        <div className="relative h-24 bg-custom-surface rounded-[24px] border border-custom-subtle overflow-hidden flex items-center group">
+        <div className="relative h-20 bg-custom-surface rounded-[24px] border border-custom-subtle overflow-hidden flex items-center group">
            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] z-30 pointer-events-none flex flex-col items-center">
               <div className="w-3 h-3 bg-[#1DB954] rounded-full blur-[2px] opacity-50 absolute -top-1" />
               <div className="w-[2px] h-full bg-[#1DB954] shadow-[0_0_8px_rgba(29,185,84,0.8)]" />
@@ -240,10 +261,13 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
                   </div>
                </div>
 
-               <div className="relative w-5 bg-custom-elevated rounded-full h-32 mb-4 overflow-hidden shadow-inner">
+               <div className="relative w-5 bg-custom-elevated rounded-full h-32 mb-3 overflow-hidden shadow-inner">
                   <div 
-                    className={`absolute bottom-0 w-full rounded-full bg-[#1DB954] transition-all duration-500 ${hoveredBar === i ? 'brightness-125 scale-x-110' : 'opacity-80'}`} 
-                    style={{ height: `${Math.max(bar.val, bar.amount > 0 ? 5 : 0)}%` }} 
+                    className={`absolute bottom-0 w-full rounded-full transition-all duration-500 ${hoveredBar === i ? 'brightness-125 scale-x-110' : 'opacity-90'}`} 
+                    style={{ 
+                      height: `${Math.max(bar.val, bar.amount > 0 ? 5 : 0)}%`,
+                      backgroundColor: bar.color
+                    }} 
                   />
                </div>
                <span className={`text-[9px] font-black transition-colors ${hoveredBar === i ? 'text-[#1DB954]' : 'text-custom-dim'} uppercase tracking-tighter`}>
