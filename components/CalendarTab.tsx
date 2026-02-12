@@ -9,9 +9,14 @@ interface CalendarTabProps {
 }
 
 const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
   
   const currentMonth = viewDate.getMonth();
   const currentYear = viewDate.getFullYear();
@@ -39,7 +44,7 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ transactions, t, language }) 
   }, [transactions, selectedDate]);
 
   return (
-    <div className="space-y-6 px-5 pt-6 pb-20 min-h-screen">
+    <div ref={containerRef} className="space-y-6 px-5 pt-6 pb-20 min-h-screen">
       <header className="flex justify-between items-center">
         <div className="animate-in fade-in slide-in-from-left duration-500">
           <h1 className="text-4xl font-black tracking-tighter">{t('footprint')}</h1>

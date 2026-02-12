@@ -16,9 +16,14 @@ interface HomeTabProps {
 const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAdd, onOpenSettings, onOpenManual, t }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState<'success' | 'error' | null>(null);
+
+  useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
 
   const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -98,7 +103,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
   });
 
   return (
-    <div className="space-y-6 px-5 pt-4 pb-10">
+    <div ref={containerRef} className="space-y-6 px-5 pt-4 pb-10">
       {isScanning && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex flex-col items-center justify-center">
           <div className="w-20 h-20 border-4 border-[#1DB954] border-t-transparent rounded-full animate-spin mb-4" />
@@ -188,7 +193,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
             <span className="text-[10px] font-black text-custom-dim uppercase tracking-widest">{t('budget')}</span>
             <span className="text-[#1DB954] text-xl font-black">¥{budget.toLocaleString()}</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div className="flex items-center space-x-2 text-xs mb-3">
             <div className="flex-1 h-2 bg-custom-elevated rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] transition-all duration-500"
@@ -199,16 +204,15 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
               {budget > 0 ? Math.round((expense / budget) * 100) : 0}%
             </span>
           </div>
-          <div className="mt-2 text-[9px] text-custom-dim">
+          <div className="mb-3 text-[9px] text-custom-dim">
             {budget > expense ? (
               <span>还能花 <span className="text-[#1DB954] font-black">¥{(budget - expense).toLocaleString()}</span></span>
             ) : (
               <span className="text-red-500">超支 <span className="font-black">¥{(expense - budget).toLocaleString()}</span></span>
             )}
           </div>
-        </div>
-        
-        <div className="relative h-20 bg-custom-surface rounded-[24px] border border-custom-subtle overflow-hidden flex items-center group">
+          
+          <div className="relative h-16 bg-custom-elevated rounded-2xl overflow-hidden flex items-center group">
            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] z-30 pointer-events-none flex flex-col items-center">
               <div className="w-3 h-3 bg-[#1DB954] rounded-full blur-[2px] opacity-50 absolute -top-1" />
               <div className="w-[2px] h-full bg-[#1DB954] shadow-[0_0_8px_rgba(29,185,84,0.8)]" />
@@ -239,6 +243,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
                </div>
              ))}
            </div>
+          </div>
         </div>
       </div>
 

@@ -56,7 +56,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ transactions }) => {
             <span>Data Export (CSV)</span>
           </div>
           <div className="flex items-center space-x-4 text-gray-300 hover:text-white cursor-pointer">
-            <span>About SpotiFinance</span>
+            <span>About SmartBill</span>
           </div>
           <div className="pt-4 text-red-500 font-bold cursor-pointer">
             Log out

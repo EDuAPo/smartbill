@@ -61,22 +61,44 @@ const AITab: React.FC<AITabProps> = ({ transactions, onAdd, initialPrompt, onCle
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     const reader = new FileReader();
     reader.onload = async (event) => {
       const imageData = event.target?.result as string;
       const base64 = imageData.split(',')[1];
       setMessages(prev => [...prev, { role: 'user', content: language === 'zh' ? '正在提取票据信息...' : 'Extracting info...', image: imageData }]);
       setIsTyping(true);
+      
       try {
         const result = await scanBillImage(base64);
         if (result && result.amount) {
-          onAdd({ id: Date.now().toString(), amount: result.amount, category: result.category, description: result.description, date: result.date || new Date().toISOString().split('T')[0], type: result.isExpense === false ? 'income' : 'expense' });
-          setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? `录入成功：${result.description} (¥${result.amount})` : `Logged: ${result.description} (¥${result.amount})` }]);
+          onAdd({ 
+            id: Date.now().toString(), 
+            amount: result.amount, 
+            category: result.category || 'Shopping', 
+            description: result.description || '扫描账单', 
+            date: result.date || new Date().toISOString().split('T')[0], 
+            type: result.isExpense === false ? 'income' : 'expense' 
+          });
+          setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? `录入成功：${result.description || '扫描账单'} (¥${result.amount})` : `Logged: ${result.description || 'Scanned bill'} (¥${result.amount})` }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? '未能识别有效账单信息，请重试。' : 'Could not extract valid bill info.' }]);
         }
       } catch (error) { 
-        setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? '识别失败。' : 'OCR failed.' }]);
-      } finally { setIsTyping(false); }
+        console.error('Scan error:', error);
+        setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? '识别失败，请重试。' : 'OCR failed, please retry.' }]);
+      } finally { 
+        setIsTyping(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     };
+    
+    reader.onerror = () => {
+      setMessages(prev => [...prev, { role: 'assistant', content: language === 'zh' ? '图片读取失败。' : 'Image read failed.' }]);
+      setIsTyping(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    
     reader.readAsDataURL(file);
   };
 

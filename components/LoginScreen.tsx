@@ -37,14 +37,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <div className="relative">
               <img 
                 src="/logo.webp" 
-                alt="SpotiFinance Logo" 
+                alt="SmartBill Logo"
                 className="w-32 h-32 rounded-3xl shadow-[0_0_60px_rgba(29,185,84,0.5)]"
               />
             </div>
           </div>
           
           <h1 className="text-5xl font-black text-white tracking-tight">
-            SpotiFinance
+            SmartBill
           </h1>
           <p className="text-[#B3B3B3] text-sm font-medium tracking-wide">
             你的财务 AI 助手 · 让记账像听歌一样简单

@@ -10,7 +10,12 @@ interface DetailsTabProps {
 }
 
 const DetailsTab: React.FC<DetailsTabProps> = ({ transactions, onDelete, t, language }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  React.useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
 
   const filtered = useMemo(() => {
     return transactions.filter(t => 
@@ -20,7 +25,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({ transactions, onDelete, t, lang
   }, [transactions, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#282828] to-custom-main">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-[#282828] to-custom-main">
       <div className="space-y-5 px-5 pt-10 pb-24">
         {/* Spotify "Playlist Cover" Header */}
         <div className="flex flex-col items-center mb-6 animate-in fade-in slide-in-from-top-4 duration-700">

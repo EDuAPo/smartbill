@@ -143,15 +143,15 @@ const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ isOpen, onClose, on
         </div>
 
         {/* Integrated Keypad & CONFIRM BUTTON */}
-        <div className="bg-[#121212] border-t border-white/5 p-4 pb-8">
-          <div className="grid grid-cols-4 gap-2 h-[320px]">
+        <div className="bg-[#121212] border-t border-white/5 p-2 pb-4">
+          <div className="grid grid-cols-4 gap-1.5 h-[180px]">
             {/* Numeric Section (3/4 width) */}
             <div className="col-span-3 grid grid-cols-3 gap-2">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map((k) => (
                 <button
                   key={k}
                   onClick={() => handleKeyClick(k)}
-                  className="bg-[#282828] rounded-xl flex items-center justify-center text-2xl font-black hover:bg-[#333] active:bg-[#444] transition-colors active:scale-90"
+                  className="bg-[#282828] rounded-lg flex items-center justify-center text-lg font-black hover:bg-[#333] active:bg-[#444] transition-colors active:scale-90"
                 >
                   {k === 'del' ? (
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,12 +173,12 @@ const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ isOpen, onClose, on
                     : 'bg-[#282828] text-white/20 scale-95 cursor-not-allowed grayscale'
                 }`}
               >
-                <div className={`transition-transform duration-500 ${isValid ? 'scale-125' : 'scale-100'}`}>
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <div className={`transition-transform duration-500 ${isValid ? 'scale-100' : 'scale-90'}`}>
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
                 </div>
-                <span className="text-[10px] font-black uppercase mt-4 tracking-tighter whitespace-nowrap">
+                <span className="text-[8px] font-black uppercase mt-2 tracking-tighter whitespace-nowrap">
                   {isValid ? (language === 'zh' ? '完成入账' : 'CONFIRM') : (language === 'zh' ? '填写信息' : 'ENTER INFO')}
                 </span>
               </button>

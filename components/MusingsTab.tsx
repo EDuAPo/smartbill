@@ -11,10 +11,15 @@ interface MusingsTabProps {
 }
 
 const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, language }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [musing, setMusing] = useState<string>('');
   const [insight, setInsight] = useState<string>('');
   const [personality, setPersonality] = useState<{persona: string, description: string, color: string} | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  React.useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -41,7 +46,7 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
   ];
 
   return (
-    <div className="space-y-6 px-4 pt-6 pb-20">
+    <div ref={containerRef} className="space-y-4 px-4 pt-6 pb-20">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-black">{t('discover')}</h1>
@@ -89,7 +94,7 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {moodCards.map((item) => (
           <button key={item.title} onClick={() => onSelectMood?.(item.prompt)} className={`${item.color} h-28 rounded-2xl p-4 relative group overflow-hidden text-left shadow-lg active:scale-95 transition-transform`}>
             <span className="text-lg font-black leading-tight text-white relative z-10">{item.title}</span>
