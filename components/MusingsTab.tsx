@@ -41,7 +41,7 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
   ];
 
   return (
-    <div className="space-y-8 px-5 pt-8 pb-20">
+    <div className="space-y-6 px-4 pt-6 pb-20">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-black">{t('discover')}</h1>
@@ -55,17 +55,17 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
       {/* Spending Personality Card - Spotify Wrapped Style */}
       {personality && (
         <div 
-          className="relative rounded-[40px] p-8 min-h-[220px] overflow-hidden shadow-2xl animate-in zoom-in duration-700"
-          style={{ background: `linear-gradient(135deg, ${personality.color} 0%, #121212 100%)` }}
+          className="relative rounded-3xl p-6 min-h-[180px] overflow-hidden shadow-2xl animate-in zoom-in duration-700"
+          style={{ background: `linear-gradient(135deg, ${personality.color} 0%, #0a0a0a 100%)` }}
         >
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60 mb-2">{t('personality_title')}</h3>
-            <div className="text-4xl font-black text-white tracking-tighter mb-4">{personality.persona}</div>
-            <p className="text-sm font-bold text-white/90 leading-tight max-w-[70%]">{personality.description}</p>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80 mb-2">{t('personality_title')}</h3>
+            <div className="text-3xl font-black text-white tracking-tighter mb-3">{personality.persona}</div>
+            <p className="text-sm font-bold text-white leading-tight max-w-[70%]">{personality.description}</p>
           </div>
           
-          <div className="absolute top-4 right-4 animate-bounce">
-             <svg className="w-20 h-20 text-white/20" viewBox="0 0 24 24" fill="currentColor">
+          <div className="absolute top-3 right-3 animate-bounce">
+             <svg className="w-16 h-16 text-white/30" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 1a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm0 8a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM10.8 5.3h2.4v2.4h-2.4V5.3z" />
                 <path d="M8.5 14.5h7a1.5 1.5 0 0 1 1.5 1.5v4a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-4a1.5 1.5 0 0 1 1.5-1.5z" />
              </svg>
@@ -73,7 +73,7 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-[40px] shadow-2xl bg-gradient-to-br from-custom-elevated to-black p-10 min-h-[200px] flex flex-col justify-between border border-custom-subtle">
+      <div className="relative overflow-hidden rounded-[40px] shadow-2xl bg-[#1a1a1a] p-10 min-h-[200px] flex flex-col justify-between border border-white/20">
         <div className="text-[10px] font-black text-custom-dim uppercase tracking-[0.4em]">Spending Podcast</div>
         {loading ? (
           <div className="space-y-3 animate-pulse">
@@ -81,7 +81,7 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
             <div className="h-6 bg-white/10 rounded w-4/5"></div>
           </div>
         ) : (
-          <p className="text-2xl font-black italic tracking-tighter leading-tight">"{musing}"</p>
+          <p className="text-2xl font-black italic tracking-tighter leading-tight text-white">"{musing}"</p>
         )}
         <div className="flex items-center space-x-2 text-[#1DB954] font-black text-[10px] uppercase tracking-widest">
            <div className="w-1.5 h-1.5 rounded-full bg-[#1DB954] animate-ping" />
@@ -98,9 +98,9 @@ const MusingsTab: React.FC<MusingsTabProps> = ({ transactions, onSelectMood, t, 
         ))}
       </div>
 
-      <div className="bg-custom-surface p-6 rounded-3xl border border-custom-subtle">
-        <h3 className="text-xs font-black text-custom-dim uppercase tracking-widest mb-4">{t('insights')}</h3>
-        {loading ? <div className="h-20 animate-pulse bg-white/5 rounded-xl" /> : <p className="text-sm font-medium leading-relaxed">{insight}</p>}
+      <div className="bg-[#1a1a1a] p-6 rounded-3xl border border-white/20">
+        <h3 className="text-xs font-black text-white/60 uppercase tracking-widest mb-4">{t('insights')}</h3>
+        {loading ? <div className="h-20 animate-pulse bg-white/5 rounded-xl" /> : <p className="text-sm font-medium leading-relaxed text-white/90">{insight}</p>}
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanStatus, setScanStatus] = useState<'success' | 'error' | null>(null);
 
   const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -33,6 +34,7 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
     const file = e.target.files?.[0];
     if (!file) return;
     setIsScanning(true);
+    setScanStatus(null);
     const reader = new FileReader();
     reader.onload = async (event) => {
       const base64 = (event.target?.result as string).split(',')[1];
@@ -42,14 +44,26 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
           onAdd({
             id: Date.now().toString(),
             amount: result.amount,
-            category: result.category,
-            description: result.description,
+            category: result.category || 'Shopping',
+            description: result.description || '扫描账单',
             date: result.date || new Date().toISOString().split('T')[0],
             type: result.isExpense === false ? 'income' : 'expense'
           });
+          setScanStatus('success');
+          setTimeout(() => setScanStatus(null), 3000);
+        } else {
+          setScanStatus('error');
+          setTimeout(() => setScanStatus(null), 3000);
         }
-      } catch (error) { console.error(error); } 
-      finally { setIsScanning(false); }
+      } catch (error) { 
+        console.error(error);
+        setScanStatus('error');
+        setTimeout(() => setScanStatus(null), 3000);
+      } 
+      finally { 
+        setIsScanning(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -88,6 +102,32 @@ const HomeTab: React.FC<HomeTabProps> = ({ transactions, budget, setBudget, onAd
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex flex-col items-center justify-center">
           <div className="w-20 h-20 border-4 border-[#1DB954] border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-[#1DB954] font-black uppercase tracking-widest text-xs">AI 分析中...</p>
+        </div>
+      )}
+
+      {scanStatus && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-[slideDown_0.3s_ease-out]">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 ${
+            scanStatus === 'success' 
+              ? 'bg-[#1DB954] text-black' 
+              : 'bg-red-500 text-white'
+          }`}>
+            {scanStatus === 'success' ? (
+              <>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-black text-sm">账单已添加</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span className="font-black text-sm">识别失败，请重试</span>
+              </>
+            )}
+          </div>
         </div>
       )}
 

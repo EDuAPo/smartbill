@@ -12,7 +12,8 @@ import LoginScreen from './components/LoginScreen';
 import { translations } from './services/i18n';
 
 const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // 强制从登录开始
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string>('');
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.HOME);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
@@ -33,25 +34,39 @@ const App: React.FC = () => {
     return translations[lang][key] || key;
   };
 
-  // 初始化数据
+  // 加载用户数据
   useEffect(() => {
-    if (isLoggedIn && transactions.length === 0) {
-      const mock: Transaction[] = [
-        { id: '1', amount: 8500, category: 'Salary', description: 'Monthly Salary', date: '2026-02-01', type: 'income' },
-        { id: '2', amount: 1500, category: 'Housing', description: 'Rent Payment', date: '2026-02-01', type: 'expense' },
-        { id: '3', amount: 68.5, category: 'Food', description: 'Fried Chicken', date: '2026-02-02', type: 'expense' },
-      ];
-      setTransactions(mock);
+    if (isLoggedIn && currentUser) {
+      const storageKey = `smartbill_${currentUser}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          setTransactions(data.transactions || []);
+          setBudget(data.budget || 5000);
+          setLanguage(data.language || 'zh');
+        } catch (e) {
+          console.error('加载数据失败:', e);
+        }
+      }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, currentUser]);
+
+  // 保存用户数据
+  useEffect(() => {
+    if (isLoggedIn && currentUser) {
+      const storageKey = `smartbill_${currentUser}`;
+      const data = { transactions, budget, language };
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+  }, [transactions, budget, language, isLoggedIn, currentUser]);
 
   const addTransaction = (t: Transaction) => setTransactions(prev => [t, ...prev]);
   const deleteTransaction = (id: string) => setTransactions(prev => prev.filter(item => item.id !== id));
   const clearAllData = () => setTransactions([]);
 
   const handleLoginSuccess = (user: any) => {
-    console.log('=== LOGIN SUCCESS ===');
-    console.log('User:', user);
+    setCurrentUser(user.username);
     setIsLoggedIn(true);
   };
 
@@ -97,14 +112,16 @@ const App: React.FC = () => {
     <div style={{ 
       display: 'flex', 
       flexDirection: 'column', 
-      height: '100vh', 
+      height: '100dvh',
       width: '100vw',
+      maxWidth: '100vw',
       overflow: 'hidden', 
       position: 'fixed',
       top: 0,
       left: 0,
       background: 'linear-gradient(180deg, #222222 0%, #121212 100%)', 
-      color: '#FFFFFF' 
+      color: '#FFFFFF',
+      touchAction: 'pan-y'
     }}>
       <style>{`
         :root { 
@@ -132,10 +149,12 @@ const App: React.FC = () => {
         flex: 1, 
         overflowY: 'auto', 
         overflowX: 'hidden',
-        paddingBottom: '96px', 
+        paddingBottom: '80px',
         position: 'relative', 
         zIndex: 10,
-        width: '100%'
+        width: '100%',
+        maxWidth: '100vw',
+        WebkitOverflowScrolling: 'touch'
       }} className="scrollbar-hide">
         {renderContent()}
       </main>
