@@ -183,8 +183,12 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
       <div className={`fixed top-0 left-0 h-full w-[85%] max-w-sm bg-custom-main z-[101] shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} border-r border-custom-subtle`}>
         <div className="p-6 pt-12 space-y-8 flex flex-col h-full overflow-y-auto no-scrollbar">
           <div className="flex items-center space-x-4 mb-8">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1DB954] to-black flex items-center justify-center text-xl font-black text-white shadow-premium">
-              {userName[0]}
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-800 flex items-center justify-center text-xl font-black text-white shadow-premium">
+              <img 
+                src="/android-chrome-192x192.png" 
+                alt="User Avatar" 
+                className="w-10 h-10 rounded-full object-cover"
+              />
             </div>
             <div>
               <h2 className="text-xl font-black">{userName}</h2>

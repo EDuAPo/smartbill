@@ -36,7 +36,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           <div className="flex justify-center mb-6">
             <div className="relative">
               <img 
-                src="/logo.webp" 
+                src="/android-chrome-512x512.png" 
                 alt="SmartBill Logo"
                 className="w-32 h-32 rounded-3xl shadow-[0_0_60px_rgba(29,185,84,0.5)]"
               />

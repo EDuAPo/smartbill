@@ -12,8 +12,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ transactions }) => {
   return (
     <div className="space-y-8 pb-10">
       <header className="flex items-center space-x-4">
-        <div className="w-16 h-16 rounded-full bg-[#1DB954] flex items-center justify-center text-2xl font-bold text-black">
-          JD
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-800 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+          <img 
+            src="/android-chrome-192x192.png" 
+            alt="User Avatar" 
+            className="w-12 h-12 rounded-full object-cover"
+          />
         </div>
         <div>
           <h1 className="text-2xl font-bold">John Doe</h1>
