@@ -44,16 +44,33 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
   const [mMerchant, setMMerchant] = useState('');
   const [mCategory, setMCategory] = useState<CategoryType>(CategoryType.OTHER);
 
+  const STORAGE_KEY = 'smartbill_ai_messages';
+  
   const greetings = ["哟，今儿又是为哪家店的营业额做贡献了？", "还没睡？看来是今天的账单太沉，压得你睡不着？"];
+  
+  // Load messages from localStorage on mount
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'ai', 
     text: string, 
     vibe?: string, 
     moodColor?: string,
     data?: any[] 
-  }>>([
-    { role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '待机中' }
-  ]);
+  }>>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return [{ role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '待机中' }];
+      }
+    }
+    return [{ role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '待机中' }];
+  });
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   const aiRef = useRef(new SmartBillAI());
   const scrollRef = useRef<HTMLDivElement>(null);
