@@ -1,15 +1,23 @@
 import { CategoryType, Transaction } from "../types";
 
-// DeepSeek API配置
+// API 配置
 const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
-const DEEPSEEK_API_KEY = localStorage.getItem("deepseek_api_key") || "";
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+
+// 获取 API Keys
+function getDeepSeekApiKey(): string {
+  return localStorage.getItem("deepseek_api_key") || "";
+}
+
+function getOpenAIApiKey(): string {
+  return localStorage.getItem("openai_api_key") || "";
+}
 
 export class SmartBillAI {
   private formatTransactions(transactions: Transaction[], monthlyBudget: number) {
     const today = new Date().toLocaleDateString('en-CA');
-    const currentMonth = today.substring(0, 7); // YYYY-MM
+    const currentMonth = today.substring(0, 7);
     
-    // 获取当月已确认的交易（排除需要确认的和收入）
     const monthExpenses = transactions.filter(t => 
       t.date.startsWith(currentMonth) && 
       !t.needConfirmation && 
@@ -45,7 +53,11 @@ ${recent || '暂无'}
 `;
   }
 
-  private getSystemInstruction(monthlyBudget: number, currentDate: string, context: string) {
+  private getSystemInstruction(monthlyBudget: number, currentDate: string, context: string, isImageAnalysis: boolean = false) {
+    const imageContext = isImageAnalysis 
+      ? "\n# 图片分析任务\n你正在分析用户提供的图片。如果图片是账单，请提取所有交易信息；如果不是账单（如风景照、人物照），请返回空transactions并友好地回复用户。" 
+      : "";
+      
     return `你叫"财伴"，是一个清醒、毒舌但内心温暖的财务损友。
 你存在的唯一目的是帮用户看住钱包，并在他乱花钱时狠狠吐槽。
 
@@ -60,11 +72,13 @@ ${recent || '暂无'}
 - 如果用户问及你没看到的数据，直接告诉他你还没记呢。
 
 ${context}
+${imageContext}
 
 # 交易识别逻辑
 1. **意图分类**：
    - 【查询型】：用户在问自己的财务状况。直接根据上下文回复，不需要生成 transactions 数组。
    - 【记账型】：包含[具体动作] + [明确金额]。如果金额是入账性质，设为"收入"分类。
+   - 【图片分析型】：用户上传了图片。如果是账单，提取数据；如果不是账单，transactions为空数组。
    - 【感慨型】：纯吐槽。
 2. **输出结构**：必须返回严格的 JSON。如果是查询型且没有新账单，transactions 设为空数组 []。
 
@@ -76,42 +90,10 @@ ${context}
 }`;
   }
 
-  private getResponseSchema() {
-    return {
-      type: "object",
-      properties: {
-        chat_response: { type: "string" },
-        transactions: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              amount: { type: "number" },
-              category: { type: "string" },
-              merchant: { type: "string" },
-              date: { type: "string" }
-            },
-            required: ["amount", "category", "merchant", "date"]
-          }
-        },
-        ai_persona: {
-          type: "object",
-          properties: {
-            vibe_check: { type: "string" },
-            mood_color: { type: "string" }
-          },
-          required: ["vibe_check", "mood_color"]
-        }
-      },
-      required: ["chat_response", "transactions", "ai_persona"]
-    };
-  }
-
   private async callDeepSeek(prompt: string, systemInstruction: string): Promise<any> {
-    const apiKey = localStorage.getItem("deepseek_api_key") || "";
+    const apiKey = getDeepSeekApiKey();
     
     if (!apiKey) {
-      // 如果没有API Key，提示用户设置
       return {
         chat_response: "请先在设置中配置 DeepSeek API Key",
         transactions: [],
@@ -156,10 +138,68 @@ ${context}
     }
   }
 
+  private async callOpenAIVision(base64Image: string, mimeType: string, systemInstruction: string): Promise<any> {
+    const apiKey = getOpenAIApiKey();
+    
+    if (!apiKey) {
+      return {
+        chat_response: "请先在设置中配置 OpenAI API Key（用于图片分析）",
+        transactions: [],
+        ai_persona: { vibe_check: "困惑", mood_color: "#ffa500" }
+      };
+    }
+
+    try {
+      const response = await fetch(OPENAI_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemInstruction },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${mimeType};base64,${base64Image}`
+                  }
+                }
+              ]
+            }
+          ],
+          response_format: {
+            type: "json_object"
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "API request failed");
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+      return JSON.parse(content);
+    } catch (e: any) {
+      console.error("OpenAI Vision API Error:", e);
+      return {
+        chat_response: `图片分析失败: ${e.message}`,
+        transactions: [],
+        ai_persona: { vibe_check: "沮丧", mood_color: "#ff6b6b" }
+      };
+    }
+  }
+
   async parseTransaction(input: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
     const currentDate = new Date().toLocaleDateString('en-CA');
     const context = this.formatTransactions(transactions, monthlyBudget);
-    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context);
+    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context, false);
     
     return this.callDeepSeek(input, systemInstruction);
   }
@@ -167,18 +207,33 @@ ${context}
   async parseMultimodal(data: string, mimeType: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
     const currentDate = new Date().toLocaleDateString('en-CA');
     const context = this.formatTransactions(transactions, monthlyBudget);
-    const prompt = `分析这张图片。如果是账单，提取数据；如果是生活照，别乱记账，跟我聊聊照片。\n\n图片数据（base64）: ${data}`;
-    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context);
+    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context, true);
     
+    // 优先使用 OpenAI Vision（如果配置了）
+    const openAIKey = getOpenAIApiKey();
+    if (openAIKey) {
+      return this.callOpenAIVision(data, mimeType, systemInstruction);
+    }
+    
+    // 否则使用 DeepSeek（仅支持文本，图片会被忽略）
+    const prompt = `分析这张图片。如果是账单，提取数据；如果是生活照，别乱记账，跟我聊聊照片。\n\n图片数据（base64）: ${data}`;
     return this.callDeepSeek(prompt, systemInstruction);
   }
 }
 
-// 保存 API Key 的方法
+// API Key 管理方法
 export function setDeepSeekApiKey(apiKey: string) {
   localStorage.setItem("deepseek_api_key", apiKey);
 }
 
-export function getDeepSeekApiKey(): string {
+export function getDeepSeekApiKeyStored(): string {
   return localStorage.getItem("deepseek_api_key") || "";
+}
+
+export function setOpenAIApiKey(apiKey: string) {
+  localStorage.setItem("openai_api_key", apiKey);
+}
+
+export function getOpenAIApiKeyStored(): string {
+  return localStorage.getItem("openai_api_key") || "";
 }

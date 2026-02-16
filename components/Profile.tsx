@@ -136,15 +136,27 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
           <div className="space-y-3">
             <SettingsItem 
               onClick={() => {
-                const apiKey = window.prompt('请输入 DeepSeek API Key:');
+                const apiKey = window.prompt('请输入 DeepSeek API Key (用于文字对话):');
                 if (apiKey) {
                   localStorage.setItem('deepseek_api_key', apiKey);
-                  showNotify('API Key 已保存', 'success');
+                  showNotify('DeepSeek API Key 已保存', 'success');
                 }
               }}
               icon={<span className="text-amber-400">🔑</span>} 
               label="DeepSeek API Key" 
-              sub="用于 AI 记账功能"
+              sub="用于文字对话和基础记账"
+            />
+            <SettingsItem 
+              onClick={() => {
+                const apiKey = window.prompt('请输入 OpenAI API Key (用于图片识别):');
+                if (apiKey) {
+                  localStorage.setItem('openai_api_key', apiKey);
+                  showNotify('OpenAI API Key 已保存', 'success');
+                }
+              }}
+              icon={<span className="text-blue-400">🖼️</span>} 
+              label="OpenAI API Key" 
+              sub="用于拍照/相册识别账单 (可选)"
             />
           </div>
         </section>
