@@ -29,12 +29,42 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const mainContentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastScrollTop = useRef(0);
   
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('smartbill_user');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // Dock visibility state
+  const [isDockVisible, setIsDockVisible] = useState(true);
+  const [isDockHovered, setIsDockHovered] = useState(false);
+
+  // Handle scroll to show/hide dock
+  const handleScroll = useCallback(() => {
+    if (!mainContentRef.current) return;
+    const currentScrollTop = mainContentRef.current.scrollTop;
+    const scrollDiff = lastScrollTop.current - currentScrollTop;
+    
+    // Show dock when hovering
+    if (isDockHovered) {
+      lastScrollTop.current = currentScrollTop;
+      return;
+    }
+    
+    // Scroll down - hide dock
+    if (scrollDiff < -10) {
+      setIsDockVisible(false);
+    }
+    // Scroll up - show dock
+    else if (scrollDiff > 10) {
+      setIsDockVisible(true);
+    }
+    
+    lastScrollTop.current = currentScrollTop;
+  }, [isDockHovered]);
 
   const [monthlyBudget, setMonthlyBudget] = useState<number>(() => {
     const saved = localStorage.getItem('smartbill_budget');
@@ -401,7 +431,11 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto pb-32 px-4 pt-8 no-scrollbar">
+      <main 
+        ref={mainContentRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto pb-32 px-4 pt-8 no-scrollbar"
+      >
         <Routes>
           <Route path="/" element={<Dashboard user={user} transactions={transactions} monthlyBudget={monthlyBudget} onConfirm={(id) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, needConfirmation: false } : t))} onDelete={(id) => setTransactions(prev => prev.filter(t => t.id !== id))} showNotify={showNotify} />} />
           <Route path="/reports" element={<Reports transactions={transactions} monthlyBudget={monthlyBudget} setMonthlyBudget={setMonthlyBudget} showNotify={showNotify} />} />
@@ -411,8 +445,14 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Main Dock */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/95 to-transparent pointer-events-none z-30" />
-      <nav className="absolute bottom-4 left-6 right-6 glass border border-white/10 h-20 px-4 flex items-center justify-between z-40 rounded-[32px] pointer-events-auto">
+      <div 
+        className={`absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/95 to-transparent pointer-events-none z-30 transition-all duration-300 ${isDockVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full'}`} 
+      />
+      <nav 
+        onMouseEnter={() => setIsDockHovered(true)}
+        onMouseLeave={() => setIsDockHovered(false)}
+        className={`absolute left-6 right-6 glass border border-white/10 h-20 px-4 flex items-center justify-between z-40 rounded-[32px] pointer-events-auto transition-all duration-300 ${isDockVisible ? 'bottom-4 opacity-100' : '-bottom-24 opacity-0'}`}
+      >
         <div className="flex flex-1 items-center justify-around pr-4">
           <NavLink to="/" icon={<Home />} label="首页" />
           <NavLink to="/reports" icon={<PieChart />} label="统计" />
