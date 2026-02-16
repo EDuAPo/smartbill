@@ -132,6 +132,24 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
 
       <div className="space-y-6">
         <section>
+          <h3 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.2em] mb-4 px-2">AI 设置</h3>
+          <div className="space-y-3">
+            <SettingsItem 
+              onClick={() => {
+                const apiKey = window.prompt('请输入 DeepSeek API Key:');
+                if (apiKey) {
+                  localStorage.setItem('deepseek_api_key', apiKey);
+                  showNotify('API Key 已保存', 'success');
+                }
+              }}
+              icon={<span className="text-amber-400">🔑</span>} 
+              label="DeepSeek API Key" 
+              sub="用于 AI 记账功能"
+            />
+          </div>
+        </section>
+
+        <section>
           <h3 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.2em] mb-4 px-2">自动同步</h3>
           <div className="space-y-3">
             <SettingsItem 
