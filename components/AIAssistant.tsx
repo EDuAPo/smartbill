@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 
 interface Props {
+  user: {
+    nickname: string;
+    avatar?: string;
+  };
   transactions: Transaction[];
   monthlyBudget: number;
   onAdd: (t: Omit<Transaction, 'id'>) => void;
@@ -28,7 +32,7 @@ const CategoryIcons: Record<CategoryType, React.ReactNode> = {
   [CategoryType.OTHER]: <MoreHorizontal className="w-4 h-4" />,
 };
 
-const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, showNotify }) => {
+const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd, showNotify }) => {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

@@ -504,7 +504,7 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<Dashboard user={user} transactions={transactions} monthlyBudget={monthlyBudget} onConfirm={(id) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, needConfirmation: false } : t))} onDelete={(id) => setTransactions(prev => prev.filter(t => t.id !== id))} showNotify={showNotify} />} />
           <Route path="/reports" element={<Reports transactions={transactions} monthlyBudget={monthlyBudget} setMonthlyBudget={setMonthlyBudget} showNotify={showNotify} />} />
-          <Route path="/ai" element={<AIAssistant transactions={transactions} monthlyBudget={monthlyBudget} onAdd={addTransaction} showNotify={showNotify} />} />
+          <Route path="/ai" element={<AIAssistant user={user} transactions={transactions} monthlyBudget={monthlyBudget} onAdd={addTransaction} showNotify={showNotify} />} />
           <Route path="/profile" element={<Profile user={user} transactions={transactions} onLogout={handleLogout} onUserUpdate={setUser} showNotify={showNotify} />} />
         </Routes>
       </main>
