@@ -59,30 +59,19 @@ const AppContent: React.FC = () => {
   const scanTimerRef = useRef<any>(null);
   const aiRef = useRef(new SmartBillAI());
 
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: '1',
-      amount: 45.00,
-      category: CategoryType.FOOD,
-      merchant: '瑞幸咖啡',
-      date: new Date().toLocaleDateString('en-CA'),
-      isAutoImported: true,
-      needConfirmation: true,
-    },
-    {
-      id: '2',
-      amount: 12.00,
-      category: CategoryType.TRANSPORT,
-      merchant: '滴滴出行',
-      date: new Date().toLocaleDateString('en-CA'),
-      isAutoImported: true,
-      needConfirmation: true,
-    }
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const saved = localStorage.getItem('smartbill_transactions');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     localStorage.setItem('smartbill_budget', monthlyBudget.toString());
   }, [monthlyBudget]);
+
+  // 保存交易记录到本地存储
+  useEffect(() => {
+    localStorage.setItem('smartbill_transactions', JSON.stringify(transactions));
+  }, [transactions]);
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
