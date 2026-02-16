@@ -11,6 +11,7 @@ import {
 
 interface Props {
   transactions: Transaction[];
+  monthlyBudget: number;
   onAdd: (t: Omit<Transaction, 'id'>) => void;
   showNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
@@ -27,7 +28,7 @@ const CategoryIcons: Record<CategoryType, React.ReactNode> = {
   [CategoryType.OTHER]: <MoreHorizontal className="w-4 h-4" />,
 };
 
-const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
+const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, showNotify }) => {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -146,7 +147,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
     setLoading(true);
     setLoadingText("翻账本中...");
     try {
-      const result = await aiRef.current.parseTransaction(currentInput, transactions);
+      const result = await aiRef.current.parseTransaction(currentInput, transactions, monthlyBudget);
       processResponse(result);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: '断网了。估计是你的账单太惊人，把基站吓坏了。' }]);
@@ -170,7 +171,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
           const base64Audio = (reader.result as string).split(',')[1];
           setLoading(true);
           try {
-            const result = await aiRef.current.parseMultimodal(base64Audio, 'audio/webm', transactions);
+            const result = await aiRef.current.parseMultimodal(base64Audio, 'audio/webm', transactions, monthlyBudget);
             processResponse(result);
           } catch (err) { showNotify("听不太清", "error"); }
           finally { setLoading(false); }
@@ -215,10 +216,10 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
     setIsLiveCameraOpen(false);
     setLoading(true);
     try {
-      const res = await aiRef.current.parseMultimodal(data, 'image/jpeg', transactions);
+      const res = await aiRef.current.parseMultimodal(data, 'image/jpeg', transactions, monthlyBudget);
       processResponse(res);
     } finally { setLoading(false); }
-  }, [showNotify, transactions]);
+  }, [showNotify, transactions, monthlyBudget]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-black">

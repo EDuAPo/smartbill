@@ -5,9 +5,18 @@ const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 const DEEPSEEK_API_KEY = localStorage.getItem("deepseek_api_key") || "";
 
 export class SmartBillAI {
-  private formatTransactions(transactions: Transaction[]) {
-    if (transactions.length === 0) return "目前还没有任何消费记录。";
+  private formatTransactions(transactions: Transaction[], monthlyBudget: number) {
     const today = new Date().toLocaleDateString('en-CA');
+    const currentMonth = today.substring(0, 7); // YYYY-MM
+    
+    // 获取当月已确认的交易（排除需要确认的和收入）
+    const monthExpenses = transactions.filter(t => 
+      t.date.startsWith(currentMonth) && 
+      !t.needConfirmation && 
+      t.category !== '收入'
+    );
+    const monthTotal = monthExpenses.reduce((sum, t) => sum + t.amount, 0);
+    const remaining = monthlyBudget - monthTotal;
     
     const todayList = transactions.filter(t => t.date === today && !t.needConfirmation);
     const todayTotal = todayList.reduce((sum, t) => sum + t.amount, 0);
@@ -16,12 +25,23 @@ export class SmartBillAI {
       `- ${t.date} | ${t.merchant} | ${t.category} | ¥${t.amount}`
     ).join('\n');
 
+    let budgetInfo = "";
+    if (transactions.length > 0) {
+      budgetInfo = `
+# 本月预算信息
+- 月度预算: ¥${monthlyBudget}
+- 本月已消费: ¥${monthTotal}
+- 剩余可用: ¥${remaining}
+- 预算使用进度: ${Math.round((monthTotal / monthlyBudget) * 100)}%
+`;
+    }
+
     return `
-# 当前财务概况 (日期: ${today})
+# 当前财务概况 (日期: ${today})${budgetInfo}
 - 今日已确认支出: ¥${todayTotal}
 - 今日明细: ${todayList.map(t => `${t.merchant}(¥${t.amount})`).join(', ') || '无'}
 - 最近10笔记录:
-${recent}
+${recent || '暂无'}
 `;
   }
 
@@ -138,7 +158,7 @@ ${context}
 
   async parseTransaction(input: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
     const currentDate = new Date().toLocaleDateString('en-CA');
-    const context = this.formatTransactions(transactions);
+    const context = this.formatTransactions(transactions, monthlyBudget);
     const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context);
     
     return this.callDeepSeek(input, systemInstruction);
@@ -146,7 +166,7 @@ ${context}
 
   async parseMultimodal(data: string, mimeType: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
     const currentDate = new Date().toLocaleDateString('en-CA');
-    const context = this.formatTransactions(transactions);
+    const context = this.formatTransactions(transactions, monthlyBudget);
     const prompt = `分析这张图片。如果是账单，提取数据；如果是生活照，别乱记账，跟我聊聊照片。\n\n图片数据（base64）: ${data}`;
     const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context);
     
