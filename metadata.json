@@ -1,0 +1,8 @@
+{
+  "name": "SmartBill (财伴)",
+  "description": "An AI-powered personal finance assistant that automatically tracks expenses, categorizes them intelligently, and provides gentle, friendly financial advice with a premium Apple/Spotify-inspired aesthetic.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

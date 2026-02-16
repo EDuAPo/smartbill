@@ -1,0 +1,20 @@
+
+{
+  "name": "smartbill-ai",
+  "version": "1.0.0",
+  "description": "财伴 - 你的智能 AI 记账助手",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "mkdir -p dist && cp -rv . dist && rm -rf dist/node_modules dist/dist",
+    "start": "npx serve dist"
+  },
+  "dependencies": {
+    "@google/genai": "^1.41.0",
+    "lucide-react": "^0.564.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.0",
+    "recharts": "^3.7.0"
+  }
+}
