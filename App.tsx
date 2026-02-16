@@ -210,50 +210,86 @@ const AppContent: React.FC = () => {
 
       {/* Manual Quick Record Modal */}
       {showManualForm && (
-        <div className="absolute inset-0 z-[1500] bg-black/80 backdrop-blur-xl flex items-end justify-center animate-in fade-in duration-300">
-           <div className="w-full glass rounded-t-[48px] p-8 space-y-8 animate-in slide-in-from-bottom-12 duration-500 border-t border-white/10 pb-12">
-              <div className="flex justify-between items-center">
-                 <h2 className="text-2xl font-black tracking-tight">记一笔</h2>
-                 <button onClick={() => setShowManualForm(false)} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center"><X className="w-5 h-5" /></button>
+        <div className="absolute inset-0 z-[1500] bg-black/90 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
+           <div className="w-full max-w-md h-[85%] bg-[#0a0a0a] rounded-t-[40px] p-6 flex flex-col animate-in slide-in-from-bottom-8 duration-500 border-t border-white/10">
+              <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-xl font-black tracking-tight">记一笔</h2>
+                 <button onClick={() => setShowManualForm(false)} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                   <X className="w-5 h-5" />
+                 </button>
               </div>
               
-              <div className="space-y-6">
-                <div className="text-center">
-                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">金额</p>
-                   <input 
+              <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar">
+                {/* 金额输入 */}
+                <div className="bg-gradient-to-br from-emerald-500/20 to-transparent rounded-3xl p-6 border border-emerald-500/20">
+                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2">金额</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-4xl font-black text-emerald-400">¥</span>
+                    <input 
                       autoFocus
                       type="number" 
                       placeholder="0.00" 
-                      className="bg-transparent text-6xl font-black text-center outline-none w-full text-emerald-400 tabular-nums" 
+                      className="bg-transparent text-6xl font-black text-center outline-none text-emerald-400 tabular-nums w-full" 
                       value={mAmount} 
                       onChange={e => setMAmount(e.target.value)} 
-                   />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="glass bg-white/5 rounded-2xl p-4 flex items-center gap-3">
-                    <Edit3 className="w-5 h-5 text-zinc-500" />
-                    <input 
-                      placeholder="买了什么？(如: 晚餐、电影票)" 
-                      className="flex-1 bg-transparent outline-none text-sm font-bold"
-                      value={mMerchant}
-                      onChange={e => setMMerchant(e.target.value)}
                     />
                   </div>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {Object.values(CategoryType).map(cat => (
-                      <button 
-                        key={cat}
-                        onClick={() => setMCategory(cat)}
-                        className={`py-3 rounded-xl text-[10px] font-black transition-all border ${mCategory === cat ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/20'}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
+                {/* 商户输入 */}
+                <div className="glass bg-white/5 rounded-2xl p-4 flex items-center gap-3 border border-white/10">
+                  <Edit3 className="w-5 h-5 text-zinc-500" />
+                  <input 
+                    placeholder="买了什么？(如: 晚餐、电影票)" 
+                    className="flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder-zinc-600"
+                    value={mMerchant}
+                    onChange={e => setMMerchant(e.target.value)}
+                  />
+                </div>
+
+                {/* 分类选择 - Spotify 风格 */}
+                <div>
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">选择分类</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.values(CategoryType).map((cat, idx) => {
+                      const gradients = [
+                        'from-orange-500 to-rose-500',    // 餐饮 - 暖色
+                        'from-purple-500 to-pink-500',    // 购物 - 紫色
+                        'from-blue-500 to-cyan-500',     // 交通 - 蓝色
+                        'from-violet-500 to-purple-500', // 娱乐 - 紫色
+                        'from-emerald-500 to-teal-500',  // 住房 - 绿色
+                        'from-red-500 to-orange-500',    // 医疗 - 红色
+                        'from-indigo-500 to-blue-500',   // 教育 - 靛蓝
+                        'from-yellow-500 to-green-500',   // 收入 - 金色
+                        'from-zinc-500 to-neutral-500',  // 其他 - 灰色
+                      ];
+                      const icons = [
+                        '🍜', '🛍️', '🚗', '🎬', '🏠', '💊', '📚', '💰', '📦'
+                      ];
+                      return (
+                        <button 
+                          key={cat}
+                          onClick={() => setMCategory(cat)}
+                          className={`p-4 rounded-2xl text-left transition-all duration-300 border-2 ${
+                            mCategory === cat 
+                              ? 'border-white scale-105 shadow-2xl' 
+                              : 'border-transparent opacity-70 hover:opacity-100'
+                          } bg-gradient-to-br ${gradients[idx]} relative overflow-hidden`}
+                        >
+                          <div className="absolute inset-0 bg-black/20" />
+                          <div className="relative flex items-center gap-3">
+                            <span className="text-2xl">{icons[idx]}</span>
+                            <span className="text-sm font-black text-white uppercase tracking-wider">{cat}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* 确认按钮 */}
+              <div className="pt-4">
                 <button 
                   disabled={!mAmount || !mMerchant}
                   onClick={() => {
@@ -263,7 +299,7 @@ const AppContent: React.FC = () => {
                     setMMerchant('');
                     showNotify("账单已成功入账");
                   }}
-                  className="w-full py-5 bg-emerald-500 disabled:opacity-20 disabled:grayscale rounded-[24px] font-black text-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-emerald-500 disabled:opacity-20 disabled:grayscale rounded-2xl font-black text-lg transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30"
                 >
                   <Check className="w-5 h-5" />
                   确认入账
