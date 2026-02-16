@@ -41,42 +41,42 @@ const AppContent: React.FC = () => {
   // Dock visibility state
   const [isDockVisible, setIsDockVisible] = useState(true);
   const [isDockHovered, setIsDockHovered] = useState(false);
+  const isDockHoveredRef = useRef(false);
+
+  // Update ref when hover state changes
+  useEffect(() => {
+    isDockHoveredRef.current = isDockHovered;
+  }, [isDockHovered]);
 
   // Handle scroll to show/hide dock - works globally on window scroll
   useEffect(() => {
-    let ticking = false;
+    let lastScrollY = window.scrollY;
     
     const handleWindowScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          // Skip if hovering on dock
-          if (isDockHovered) {
-            ticking = false;
-            return;
-          }
-          
-          const currentScrollTop = window.scrollY;
-          const scrollDiff = lastScrollTop.current - currentScrollTop;
-          
-          // Scroll down - hide dock
-          if (scrollDiff < -5) {
-            setIsDockVisible(false);
-          }
-          // Scroll up - show dock
-          else if (scrollDiff > 5) {
-            setIsDockVisible(true);
-          }
-          
-          lastScrollTop.current = currentScrollTop;
-          ticking = false;
-        });
-        ticking = true;
+      const currentScrollY = window.scrollY;
+      const scrollDiff = lastScrollY - currentScrollY;
+      
+      // Skip if hovering on dock
+      if (isDockHoveredRef.current) {
+        lastScrollY = currentScrollY;
+        return;
       }
+      
+      // Scroll down - hide dock
+      if (scrollDiff < -10) {
+        setIsDockVisible(false);
+      }
+      // Scroll up - show dock
+      else if (scrollDiff > 10) {
+        setIsDockVisible(true);
+      }
+      
+      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleWindowScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, [isDockHovered]);
+  }, []);
 
   const [monthlyBudget, setMonthlyBudget] = useState<number>(() => {
     const saved = localStorage.getItem('smartbill_budget');
