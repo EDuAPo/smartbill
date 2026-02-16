@@ -44,6 +44,11 @@ export class AuthService {
 
   async exchangeCodeForUser(code: string): Promise<{ user: User; token: string }> {
     await new Promise(resolve => setTimeout(resolve, 1500)); 
+    
+    // 微信登录时，检查是否已有手机号关联的数据
+    // 提示：实际上微信 OAuth 不会返回手机号，这里是模拟逻辑
+    // 真正的生产环境需要后端来处理微信登录并关联手机号
+    
     const user: User = {
       id: 'wx_' + Math.random().toString(36).substr(2, 9),
       nickname: '微信用户',
@@ -51,6 +56,9 @@ export class AuthService {
       isLoggedIn: true,
       loginMethod: 'wechat'
     };
+    
+    // 注意：微信登录创建的是新用户，数据独立存储
+    // 如需与手机号账号同步，建议使用手机号登录
     const token = btoa(`${user.id}-${Date.now()}`);
     localStorage.setItem(SESSION_KEY, token);
     localStorage.setItem('smartbill_user', JSON.stringify(user));
