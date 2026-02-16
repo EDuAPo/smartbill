@@ -136,27 +136,15 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
           <div className="space-y-3">
             <SettingsItem 
               onClick={() => {
-                const apiKey = window.prompt('请输入 DeepSeek API Key (用于文字对话):');
+                const apiKey = window.prompt('请输入阿里云千问 API Key:\n(在阿里云DashScope获取，支持文字对话和图片识别)');
                 if (apiKey) {
-                  localStorage.setItem('deepseek_api_key', apiKey);
-                  showNotify('DeepSeek API Key 已保存', 'success');
+                  localStorage.setItem('qwen_api_key', apiKey);
+                  showNotify('千问 API Key 已保存', 'success');
                 }
               }}
               icon={<span className="text-amber-400">🔑</span>} 
-              label="DeepSeek API Key" 
-              sub="用于文字对话和基础记账"
-            />
-            <SettingsItem 
-              onClick={() => {
-                const apiKey = window.prompt('请输入 OpenAI API Key (用于图片识别):');
-                if (apiKey) {
-                  localStorage.setItem('openai_api_key', apiKey);
-                  showNotify('OpenAI API Key 已保存', 'success');
-                }
-              }}
-              icon={<span className="text-blue-400">🖼️</span>} 
-              label="OpenAI API Key" 
-              sub="用于拍照/相册识别账单 (可选)"
+              label="阿里云千问 API Key" 
+              sub="文字对话 + 拍照识别 (统一接口)"
             />
           </div>
         </section>
