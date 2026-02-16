@@ -280,6 +280,13 @@ const AppContent: React.FC = () => {
     }
   };
 
+  // Listen for custom event from Dashboard to open add transaction
+  useEffect(() => {
+    const handleOpenAddTransaction = () => setIsFabOpen(true);
+    window.addEventListener('openAddTransaction', handleOpenAddTransaction);
+    return () => window.removeEventListener('openAddTransaction', handleOpenAddTransaction);
+  }, []);
+
   if (!user) return <Auth onLogin={handleLogin} />;
 
   return (
@@ -509,24 +516,12 @@ const AppContent: React.FC = () => {
       <nav 
         onMouseEnter={() => setIsDockHovered(true)}
         onMouseLeave={() => setIsDockHovered(false)}
-        className={`absolute left-6 right-6 glass border border-white/10 h-20 px-4 flex items-center justify-between z-40 rounded-[32px] pointer-events-auto transition-all duration-300 ${isDockVisible ? 'bottom-4 opacity-100' : '-bottom-24 opacity-0'}`}
+        className={`absolute left-6 right-6 glass border border-white/10 h-16 px-6 flex items-center justify-around z-40 rounded-[32px] pointer-events-auto transition-all duration-300 ${isDockVisible ? 'bottom-4 opacity-100' : '-bottom-24 opacity-0'}`}
       >
-        <div className="flex flex-1 items-center justify-around pr-4">
-          <NavLink to="/" icon={<Home />} label="首页" />
-          <NavLink to="/reports" icon={<PieChart />} label="统计" />
-        </div>
-        
-        <button 
-          onClick={() => setIsFabOpen(true)}
-          className="w-14 h-14 bg-emerald-500 rounded-[22px] flex items-center justify-center shadow-2xl shadow-emerald-500/40 active:scale-90 transition-all"
-        >
-          <Plus className="w-8 h-8 text-white" />
-        </button>
-
-        <div className="flex flex-1 items-center justify-around pl-4">
-          <NavLink to="/ai" icon={<MessageCircle />} label="助手" />
-          <NavLink to="/profile" icon={<Settings />} label="设置" />
-        </div>
+        <NavLink to="/" icon={<Home />} label="首页" />
+        <NavLink to="/reports" icon={<PieChart />} label="统计" />
+        <NavLink to="/ai" icon={<MessageCircle />} label="助手" />
+        <NavLink to="/profile" icon={<Settings />} label="设置" />
       </nav>
 
       {isProcessing && (

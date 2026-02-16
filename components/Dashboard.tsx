@@ -41,6 +41,19 @@ const Dashboard: React.FC<Props> = ({ user, transactions, monthlyBudget, onConfi
             <BellRing className="w-5 h-5 text-emerald-400" />
             {pending.length > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-black"></span>}
           </button>
+          {/* Add Transaction Button */}
+          <button 
+            onClick={() => {
+              // Trigger the FAB open in parent
+              const event = new CustomEvent('openAddTransaction');
+              window.dispatchEvent(event);
+            }}
+            className="p-2.5 bg-emerald-500 rounded-full hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/30"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
       </header>
 
