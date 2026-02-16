@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "dev": "npx serve .",
-    "build": "mkdir -p dist && cp -rv . dist && rm -rf dist/node_modules dist/dist",
-    "start": "npx serve dist"
+    "build": "echo 'Static site - no build required'",
+    "start": "npx serve ."
   },
   "dependencies": {
     "@google/genai": "^1.41.0",
