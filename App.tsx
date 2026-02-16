@@ -434,7 +434,8 @@ const AppContent: React.FC = () => {
       <main 
         ref={mainContentRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto pb-32 px-4 pt-8 no-scrollbar"     >
+        className="flex-1 overflow-y-auto pb-32 px-4 pt-8 no-scrollbar"
+      >
         <Routes>
           <Route path="/" element={<Dashboard user={user} transactions={transactions} monthlyBudget={monthlyBudget} onConfirm={(id) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, needConfirmation: false } : t))} onDelete={(id) => setTransactions(prev => prev.filter(t => t.id !== id))} showNotify={showNotify} />} />
           <Route path="/reports" element={<Reports transactions={transactions} monthlyBudget={monthlyBudget} setMonthlyBudget={setMonthlyBudget} showNotify={showNotify} />} />
