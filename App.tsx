@@ -33,9 +33,25 @@ const AppContent: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastScrollTop = useRef(0);
   
+  // 加载用户和对应手机号的交易数据
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('smartbill_user');
-    return saved ? JSON.parse(saved) : null;
+    if (saved) {
+      try {
+        const user = JSON.parse(saved);
+        if (user.phone) {
+          // 尝试加载该手机号保存的数据
+          const userData = localStorage.getItem(`smartbill_user_${user.phone}`);
+          if (userData) {
+            return JSON.parse(userData);
+          }
+        }
+        return user;
+      } catch {
+        return null;
+      }
+    }
+    return null;
   });
 
   // Dock visibility state
@@ -78,11 +94,6 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('scroll', handleWindowScroll);
   }, []);
 
-  const [monthlyBudget, setMonthlyBudget] = useState<number>(() => {
-    const saved = localStorage.getItem('smartbill_budget');
-    return saved ? parseInt(saved) : 3000;
-  });
-
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'info' | 'error'} | null>(null);
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
@@ -101,19 +112,55 @@ const AppContent: React.FC = () => {
   const scanTimerRef = useRef<any>(null);
   const aiRef = useRef(new SmartBillAI());
 
+  // 交易记录也按手机号存储
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    // 先尝试从当前用户获取
+    const savedUser = localStorage.getItem('smartbill_user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        if (user.phone) {
+          const userTx = localStorage.getItem(`smartbill_transactions_${user.phone}`);
+          if (userTx) return JSON.parse(userTx);
+        }
+      } catch {}
+    }
+    // 回退到通用存储
     const saved = localStorage.getItem('smartbill_transactions');
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem('smartbill_budget', monthlyBudget.toString());
-  }, [monthlyBudget]);
+    if (user?.phone) {
+      localStorage.setItem(`smartbill_transactions_${user.phone}`, JSON.stringify(transactions));
+    } else {
+      localStorage.setItem('smartbill_transactions', JSON.stringify(transactions));
+    }
+  }, [transactions, user]);
 
-  // 保存交易记录到本地存储
+  // 预算也按手机号存储
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(() => {
+    const savedUser = localStorage.getItem('smartbill_user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        if (user.phone) {
+          const userBudget = localStorage.getItem(`smartbill_budget_${user.phone}`);
+          if (userBudget) return parseInt(userBudget);
+        }
+      } catch {}
+    }
+    const saved = localStorage.getItem('smartbill_budget');
+    return saved ? parseInt(saved) : 3000;
+  });
+
   useEffect(() => {
-    localStorage.setItem('smartbill_transactions', JSON.stringify(transactions));
-  }, [transactions]);
+    if (user?.phone) {
+      localStorage.setItem(`smartbill_budget_${user.phone}`, monthlyBudget.toString());
+    } else {
+      localStorage.setItem('smartbill_budget', monthlyBudget.toString());
+    }
+  }, [monthlyBudget, user]);
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);

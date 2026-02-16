@@ -84,17 +84,33 @@ export class AuthService {
       return { success: false, message: '验证码错误或已失效' };
     }
 
-    const user: User = {
-      id: 'u_' + Math.random().toString(36).substr(2, 9),
-      nickname: `财友_${phone.slice(-4)}`,
-      phone,
-      isLoggedIn: true,
-      loginMethod: 'phone',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
-    };
+    // 检查是否已有该手机号的用户数据
+    const userDataKey = `smartbill_user_${phone}`;
+    const existingUserData = localStorage.getItem(userDataKey);
+    
+    let user: User;
+    
+    if (existingUserData) {
+      // 恢复已有用户数据
+      user = JSON.parse(existingUserData);
+      user.isLoggedIn = true;
+    } else {
+      // 创建新用户
+      user = {
+        id: 'u_' + phone,
+        nickname: `财友_${phone.slice(-4)}`,
+        phone,
+        isLoggedIn: true,
+        loginMethod: 'phone',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
+      };
+    }
 
     localStorage.setItem(SESSION_KEY, btoa(user.id));
     localStorage.setItem('smartbill_user', JSON.stringify(user));
+    
+    // 保存用户数据到以手机号为键的空间
+    localStorage.setItem(userDataKey, JSON.stringify(user));
     
     // 登录成功后清除该手机号的验证码缓存
     const cache = JSON.parse(localStorage.getItem(OTP_STORAGE_KEY) || '{}');
