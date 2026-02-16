@@ -1,4 +1,3 @@
-
 {
   "name": "smartbill-ai",
   "version": "1.0.0",
@@ -6,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "npx serve .",
-    "build": "echo 'Static site - no build required'",
+    "build": "node build.js",
     "start": "npx serve ."
   },
   "dependencies": {
@@ -16,5 +15,8 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0",
     "recharts": "^3.7.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
   }
 }
