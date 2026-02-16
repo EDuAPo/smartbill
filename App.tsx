@@ -283,20 +283,28 @@ const AppContent: React.FC = () => {
                 </div>
               </div>
 
-              {/* 确认按钮 - 更紧凑 */}
-              <div className="pt-3">
+              {/* 确认按钮 - 固定在底部 */}
+              <div className="pt-2 mt-auto">
                 <button 
-                  disabled={!mAmount || !mMerchant}
+                  disabled={!mAmount}
                   onClick={() => {
-                    addTransaction({ amount: parseFloat(mAmount), category: mCategory, merchant: mMerchant, date: new Date().toLocaleDateString('en-CA'), isAutoImported: false, needConfirmation: false });
+                    addTransaction({ 
+                      amount: parseFloat(mAmount), 
+                      category: mCategory, 
+                      merchant: mMerchant || '未标注', 
+                      date: new Date().toLocaleDateString('en-CA'), 
+                      isAutoImported: false, 
+                      needConfirmation: false 
+                    });
                     setShowManualForm(false);
                     setMAmount('');
                     setMMerchant('');
+                    setMCategory(CategoryType.OTHER);
                     showNotify("账单已成功入账");
                   }}
-                  className="w-full py-3 bg-emerald-500 disabled:opacity-20 disabled:grayscale rounded-xl font-bold text-base transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30"
+                  className="w-full py-4 bg-emerald-500 disabled:bg-emerald-500/30 disabled:grayscale rounded-2xl font-bold text-lg transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/40"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-5 h-5" />
                   确认入账
                 </button>
               </div>
