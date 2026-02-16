@@ -42,28 +42,40 @@ const AppContent: React.FC = () => {
   const [isDockVisible, setIsDockVisible] = useState(true);
   const [isDockHovered, setIsDockHovered] = useState(false);
 
-  // Handle scroll to show/hide dock
-  const handleScroll = useCallback(() => {
-    if (!mainContentRef.current) return;
-    const currentScrollTop = mainContentRef.current.scrollTop;
-    const scrollDiff = lastScrollTop.current - currentScrollTop;
+  // Handle scroll to show/hide dock - works globally on window scroll
+  useEffect(() => {
+    let ticking = false;
     
-    // Show dock when hovering
-    if (isDockHovered) {
-      lastScrollTop.current = currentScrollTop;
-      return;
-    }
-    
-    // Scroll down - hide dock
-    if (scrollDiff < -10) {
-      setIsDockVisible(false);
-    }
-    // Scroll up - show dock
-    else if (scrollDiff > 10) {
-      setIsDockVisible(true);
-    }
-    
-    lastScrollTop.current = currentScrollTop;
+    const handleWindowScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          // Skip if hovering on dock
+          if (isDockHovered) {
+            ticking = false;
+            return;
+          }
+          
+          const currentScrollTop = window.scrollY;
+          const scrollDiff = lastScrollTop.current - currentScrollTop;
+          
+          // Scroll down - hide dock
+          if (scrollDiff < -5) {
+            setIsDockVisible(false);
+          }
+          // Scroll up - show dock
+          else if (scrollDiff > 5) {
+            setIsDockVisible(true);
+          }
+          
+          lastScrollTop.current = currentScrollTop;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleWindowScroll);
   }, [isDockHovered]);
 
   const [monthlyBudget, setMonthlyBudget] = useState<number>(() => {
@@ -433,7 +445,6 @@ const AppContent: React.FC = () => {
 
       <main 
         ref={mainContentRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto pb-32 px-4 pt-8 no-scrollbar"
       >
         <Routes>
