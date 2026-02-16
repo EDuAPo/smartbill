@@ -42,27 +42,64 @@ export class AuthService {
     return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${WECHAT_APP_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
   }
 
-  async exchangeCodeForUser(code: string): Promise<{ user: User; token: string }> {
+  async exchangeCodeForUser(code: string): Promise<{ user: User; token: string; needPhoneBinding?: boolean }> {
     await new Promise(resolve => setTimeout(resolve, 1500)); 
     
-    // 微信登录时，检查是否已有手机号关联的数据
-    // 提示：实际上微信 OAuth 不会返回手机号，这里是模拟逻辑
+    // 模拟：微信登录时总是要求绑定手机号，以便与手机号账号数据同步
     // 真正的生产环境需要后端来处理微信登录并关联手机号
     
-    const user: User = {
-      id: 'wx_' + Math.random().toString(36).substr(2, 9),
-      nickname: '微信用户',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-      isLoggedIn: true,
-      loginMethod: 'wechat'
+    // 返回需要绑定手机号的标志
+    return { 
+      user: {} as User, 
+      token: '', 
+      needPhoneBinding: true 
     };
+  }
+  
+  // 微信登录后绑定手机号并同步数据
+  async bindPhoneAndLogin(phone: string, code: string): Promise<{ success: boolean; message: string; user?: User }> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 注意：微信登录创建的是新用户，数据独立存储
-    // 如需与手机号账号同步，建议使用手机号登录
-    const token = btoa(`${user.id}-${Date.now()}`);
-    localStorage.setItem(SESSION_KEY, token);
+    const validCode = this.getOtp(phone);
+    
+    // 允许 8888 作为万能开发码
+    if (code !== validCode && code !== '8888') {
+      return { success: false, message: '验证码错误或已失效' };
+    }
+    
+    // 检查是否已有该手机号的用户数据
+    const userDataKey = `smartbill_user_${phone}`;
+    const existingUserData = localStorage.getItem(userDataKey);
+    
+    let user: User;
+    
+    if (existingUserData) {
+      // 恢复已有用户数据
+      user = JSON.parse(existingUserData);
+      user.isLoggedIn = true;
+      user.loginMethod = 'wechat'; // 更新登录方式
+    } else {
+      // 创建新用户
+      user = {
+        id: 'u_' + phone,
+        nickname: `财友_${phone.slice(-4)}`,
+        phone,
+        isLoggedIn: true,
+        loginMethod: 'wechat',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
+      };
+    }
+    
+    localStorage.setItem(SESSION_KEY, btoa(user.id));
     localStorage.setItem('smartbill_user', JSON.stringify(user));
-    return { user, token };
+    localStorage.setItem(userDataKey, JSON.stringify(user));
+    
+    // 登录成功后清除该手机号的验证码缓存
+    const cache = JSON.parse(localStorage.getItem(OTP_STORAGE_KEY) || '{}');
+    delete cache[phone];
+    localStorage.setItem(OTP_STORAGE_KEY, JSON.stringify(cache));
+    
+    return { success: true, message: '绑定成功', user };
   }
 
   // --- 手机号验证码逻辑 (修复核心) ---

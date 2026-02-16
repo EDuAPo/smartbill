@@ -14,7 +14,7 @@ interface AuthProps {
 const authService = AuthService.getInstance();
 
 const Auth: React.FC<AuthProps> = ({ onLogin }) => {
-  const [step, setStep] = useState<'selection' | 'phone_input' | 'otp_verify' | 'oauth_callback'>('selection');
+  const [step, setStep] = useState<'selection' | 'phone_input' | 'otp_verify' | 'oauth_callback' | 'bind_phone' | 'bind_phone_otp'>('selection');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,13 +71,57 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setStep('oauth_callback');
     setLoading(true);
     try {
-      const { user } = await authService.exchangeCodeForUser(code);
+      const { user, needPhoneBinding } = await authService.exchangeCodeForUser(code);
+      
+      if (needPhoneBinding) {
+        // 需要绑定手机号
+        setStep('phone_input');
+        setLoading(false);
+        return;
+      }
+      
       window.history.replaceState({}, document.title, window.location.pathname);
       onLogin(user);
     } catch (e) {
       setError('微信认证失败');
       setStep('selection');
     } finally {
+      setLoading(false);
+    }
+  };
+  
+  // 微信登录后绑定手机号
+  const handleBindPhone = async () => {
+    if (!authService.isValidPhone(phone)) {
+      setError('请输入正确的手机号');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authService.sendOTP(phone);
+      if (res.success) {
+        setStep('bind_phone_otp');
+        setCountdown(60);
+        setSmsData({ code: res.code });
+        setTimeout(() => setSmsData(null), 15000);
+      }
+    } catch (err) {
+      setError('发送失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleBindPhoneVerify = async () => {
+    if (otp.length < 4) return;
+    setLoading(true);
+    setError('');
+    const res = await authService.bindPhoneAndLogin(phone, otp);
+    if (res.success && res.user) {
+      onLogin(res.user);
+    } else {
+      setError(res.message || '验证码错误');
       setLoading(false);
     }
   };
