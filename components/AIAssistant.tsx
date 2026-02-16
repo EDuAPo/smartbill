@@ -5,7 +5,7 @@ import { Transaction, CategoryType } from '../types';
 import { 
   Utensils, ShoppingBag, Car, Ticket, Home, Activity, GraduationCap, 
   MoreHorizontal, Camera, AudioLines, Sparkles,
-  X, Plus, Mic, Edit3, Image as ImageIcon, Loader2, Send, ChevronLeft, 
+  X, Plus, Mic, Edit3, Image as ImageIcon, Loader2, Send, ChevronLeft, Smile, Frown, Zap, StopCircle,
   Coins, User as UserIcon
 } from 'lucide-react';
 
@@ -32,7 +32,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('正在思考...');
+  const [loadingText, setLoadingText] = useState('财伴在看账单...');
   const [recording, setRecording] = useState(false);
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   
@@ -44,7 +44,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
   const [mMerchant, setMMerchant] = useState('');
   const [mCategory, setMCategory] = useState<CategoryType>(CategoryType.OTHER);
 
-  const greetings = ["有什么需要我帮忙的？", "记账、查账、问预算，我都在行"];
+  const greetings = ["哟，今儿又是为哪家店的营业额做贡献了？", "还没睡？看来是今天的账单太沉，压得你睡不着？"];
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'ai', 
     text: string, 
@@ -52,7 +52,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
     moodColor?: string,
     data?: any[] 
   }>>([
-    { role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '随时待命' }
+    { role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '待机中' }
   ]);
 
   const aiRef = useRef(new SmartBillAI());
@@ -84,15 +84,23 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
     return CategoryType.OTHER;
   };
 
+  /**
+   * 渲染消息文本，识别并高亮金额
+   */
   const renderMessageText = (text: string) => {
+    // 正则匹配: ¥100, ¥ 100, 100元, 100.50元 等
     const regex = /(¥\s?\d+(\.\d+)?|(\d+(\.\d+)?)\s?元)/g;
+    const parts = text.split(regex);
+    
+    // 因为 split 配合捕获组会把匹配项也塞进数组，我们需要过滤并渲染
+    // 逻辑：parts 数组中符合 regex 的项需要特殊处理
     return text.split(regex).map((part, index) => {
       if (!part) return null;
       if (part.match(regex)) {
         return (
           <span 
             key={index} 
-            className="text-base font-bold text-emerald-400 mx-0.5"
+            className="text-lg font-black italic text-emerald-400 mx-0.5 tabular-nums underline decoration-emerald-500/30 underline-offset-4"
           >
             {part}
           </span>
@@ -125,7 +133,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
             needConfirmation: false,
           });
         });
-        showNotify(`已添加 ${txs.length} 笔记录`);
+        showNotify(`这笔钱我记下了。`);
       }
     }
   };
@@ -137,12 +145,12 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
     setInput('');
     setShowPlusMenu(false);
     setLoading(true);
-    setLoadingText("处理中...");
+    setLoadingText("翻账本中...");
     try {
       const result = await aiRef.current.parseTransaction(currentInput, transactions, monthlyBudget);
       processResponse(result);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: '抱歉，我遇到了一些问题' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: '断网了。估计是你的账单太惊人，把基站吓坏了。' }]);
     } finally {
       setLoading(false);
     }
@@ -165,14 +173,14 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
           try {
             const result = await aiRef.current.parseMultimodal(base64Audio, 'audio/webm', transactions, monthlyBudget);
             processResponse(result);
-          } catch (err) { showNotify("识别失败", "error"); }
+          } catch (err) { showNotify("听不太清", "error"); }
           finally { setLoading(false); }
         };
         stream.getTracks().forEach(t => t.stop());
       };
       recorder.start();
       setRecording(true);
-    } catch (err) { showNotify("无法访问麦克风", "error"); }
+    } catch (err) { showNotify("权限拒绝", "error"); }
   };
 
   const stopVoice = () => {
@@ -211,65 +219,29 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
       const res = await aiRef.current.parseMultimodal(data, 'image/jpeg', transactions, monthlyBudget);
       processResponse(res);
     } finally { setLoading(false); }
-  }, [transactions, monthlyBudget]);
+  }, [showNotify, transactions, monthlyBudget]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-black">
       <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Manual Entry Modal */}
+      {/* Manual Entry */}
       {showManualForm && (
-        <div className="absolute inset-0 z-[500] flex items-center justify-center bg-black/90 backdrop-blur-xl">
-           <div className="w-full max-w-sm mx-4 glass rounded-3xl p-6 space-y-5 animate-in zoom-in-95">
+        <div className="absolute inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-xl px-6">
+           <div className="w-full glass rounded-[40px] p-8 space-y-8 animate-in zoom-in-95">
               <div className="flex justify-between items-center">
-                 <h2 className="text-lg font-bold">手动记账</h2>
-                 <button onClick={() => setShowManualForm(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10">
-                   <X className="w-4 h-4" />
-                 </button>
+                 <h2 className="text-xl font-black">手动录入</h2>
+                 <button onClick={() => setShowManualForm(false)} className="p-2 bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
               </div>
               <form onSubmit={(e) => {
                  e.preventDefault();
-                 if (mAmount) {
-                   onAdd({ 
-                     amount: parseFloat(mAmount), 
-                     category: mCategory, 
-                     merchant: mMerchant || '未标注', 
-                     date: new Date().toLocaleDateString('en-CA'), 
-                     isAutoImported: false, 
-                     needConfirmation: false 
-                   });
-                   setShowManualForm(false);
-                   setMAmount('');
-                   setMMerchant('');
-                 }
-              }} className="space-y-4">
-                 <input 
-                   type="number" 
-                   placeholder="0.00" 
-                   className="w-full bg-transparent text-4xl font-bold text-center outline-none text-emerald-400" 
-                   value={mAmount} 
-                   onChange={e => setMAmount(e.target.value)} 
-                 />
-                 <input 
-                   placeholder="备注（可选）" 
-                   className="w-full bg-white/5 rounded-xl py-3 px-4 outline-none text-sm"
-                   value={mMerchant}
-                   onChange={e => setMMerchant(e.target.value)}
-                 />
-                 <div className="grid grid-cols-3 gap-2">
-                   {Object.values(CategoryType).slice(0, 6).map(cat => (
-                     <button 
-                       key={cat}
-                       type="button"
-                       onClick={() => setMCategory(cat)}
-                       className={`py-2 rounded-lg text-xs font-medium transition-all ${mCategory === cat ? 'bg-emerald-500 text-white' : 'bg-white/5 text-zinc-400'}`}
-                     >
-                       {cat}
-                     </button>
-                   ))}
-                 </div>
-                 <button type="submit" className="w-full py-3 bg-emerald-500 rounded-xl font-bold">确认</button>
+                 onAdd({ amount: parseFloat(mAmount), category: mCategory, merchant: mMerchant, date: new Date().toLocaleDateString('en-CA'), isAutoImported: false, needConfirmation: false });
+                 setShowManualForm(false);
+              }} className="space-y-6">
+                 <input type="number" placeholder="¥ 0.00" className="bg-transparent text-5xl font-black text-center outline-none w-full" value={mAmount} onChange={e => setMAmount(e.target.value)} />
+                 <input placeholder="买了什么？" className="w-full bg-white/5 rounded-2xl py-4 px-5 outline-none" value={mMerchant} onChange={e => setMMerchant(e.target.value)} />
+                 <button className="w-full py-5 bg-emerald-500 rounded-2xl font-black">确认入账</button>
               </form>
            </div>
         </div>
@@ -279,136 +251,138 @@ const AIAssistant: React.FC<Props> = ({ transactions, monthlyBudget, onAdd, show
         <div className="absolute inset-0 z-[600] bg-black">
           <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[75%] aspect-[3/4] border-2 border-emerald-500/50 rounded-3xl" />
+            <div className="w-[80%] aspect-[3/4] border-2 border-emerald-500/30 rounded-[40px]" />
           </div>
-          <button onClick={() => setIsLiveCameraOpen(false)} className="absolute top-6 right-6 w-12 h-12 glass rounded-full flex items-center justify-center">
-            <X className="w-6 h-6" />
-          </button>
+          <button onClick={() => setIsLiveCameraOpen(false)} className="absolute top-8 right-6 w-12 h-12 glass rounded-full flex items-center justify-center"><X className="w-6 h-6" /></button>
         </div>
       )}
 
       {recording && (
-        <div className="absolute inset-0 z-[700] bg-black/95 flex flex-col items-center justify-center">
-          <div className="w-24 h-24 bg-rose-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
-            <Mic className="w-10 h-10 text-rose-500" />
-          </div>
-          <p className="text-white font-medium mb-6">正在录音...</p>
-          <button onClick={stopVoice} className="w-16 h-16 bg-rose-500 rounded-full flex items-center justify-center">
-            <X className="w-8 h-8" />
-          </button>
+        <div className="absolute inset-0 z-[700] bg-black/90 flex flex-col items-center justify-center">
+          <AudioLines className="w-16 h-16 text-emerald-500 animate-pulse mb-8" />
+          <button onClick={stopVoice} className="w-20 h-20 bg-rose-500 rounded-full flex items-center justify-center"><StopCircle className="w-10 h-10" /></button>
         </div>
       )}
 
       {/* Header */}
-      <header className="px-4 py-3 flex items-center gap-3 bg-black/95 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
-        <button onClick={() => navigate('/')} className="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-white">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-white">财伴 AI</h1>
-            <p className="text-[9px] text-zinc-500">智能记账助手</p>
-          </div>
+      <header className="px-6 py-4 flex items-center gap-4 border-b border-white/[0.05] bg-black/80 backdrop-blur-md sticky top-0 z-50">
+        <button onClick={() => navigate('/')} className="w-10 h-10 glass rounded-xl flex items-center justify-center text-zinc-400"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="flex-1">
+          <h1 className="text-sm font-black tracking-widest uppercase text-white flex items-center gap-2">
+            财伴 AI 助手
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+          </h1>
+          <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">你的财务吐槽大师</p>
         </div>
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-5">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-8 space-y-8 no-scrollbar pb-4">
         {messages.map((m, i) => (
-          <div key={i} className={`flex items-start gap-2.5 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+          <div key={i} className={`flex items-end gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             {/* Avatar */}
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${m.role === 'user' ? 'bg-indigo-500' : 'bg-emerald-500'}`}>
-              {m.role === 'user' ? <UserIcon className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-white" />}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mb-1 ${m.role === 'user' ? 'bg-indigo-500/20' : 'bg-emerald-500/20'}`}>
+              {m.role === 'user' ? <UserIcon className="w-4 h-4 text-indigo-400" /> : <Sparkles className="w-4 h-4 text-emerald-400" />}
             </div>
 
-            {/* Bubble */}
-            <div className={`max-w-[80%] ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+            {/* Bubble Container */}
+            <div className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
               <div 
-                className={`px-4 py-2.5 rounded-2xl text-sm ${
+                className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-lg transition-all duration-300 ${
                   m.role === 'user' 
-                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-tr-sm' 
-                    : 'bg-zinc-900 text-zinc-100 rounded-tl-sm border border-white/5'
+                    ? 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white rounded-br-none' 
+                    : 'bg-zinc-900 border border-white/10 text-zinc-100 rounded-bl-none'
                 }`}
+                style={m.role === 'ai' && m.moodColor ? { borderLeftColor: m.moodColor, borderLeftWidth: '3px' } : {}}
               >
-                <p className="leading-relaxed">{renderMessageText(m.text)}</p>
+                {/* 使用 renderMessageText 渲染，支持金额高亮 */}
+                <p className="flex flex-wrap items-baseline gap-y-1">
+                  {renderMessageText(m.text)}
+                </p>
                 
-                {m.data && m.data.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-white/10 space-y-1.5">
+                {m.data && (
+                  <div className="mt-3 space-y-2 pt-3 border-t border-white/10 w-full">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">自动识别结果</div>
                     {m.data.map((tx, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs bg-black/30 p-2 rounded-lg">
-                        <span className="text-zinc-300">{tx.merchant}</span>
-                        <span className="text-emerald-400 font-bold">¥{tx.amount}</span>
+                      <div key={idx} className="bg-black/50 p-2.5 rounded-xl flex justify-between items-center text-xs border border-white/5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-white/5 rounded-lg flex items-center justify-center">
+                            {CategoryIcons[mapCategory(tx.category)]}
+                          </div>
+                          <span className="font-bold truncate max-w-[80px]">{tx.merchant}</span>
+                        </div>
+                        <span className="text-emerald-400 font-black tabular-nums">¥{tx.amount}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+
+              {/* Status/Vibe Indicator */}
+              {m.role === 'ai' && m.vibe && (
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 mt-1 ml-1">
+                  {m.vibe}
+                </span>
+              )}
             </div>
           </div>
         ))}
 
         {loading && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center">
-              <Loader2 className="w-4 h-4 text-white animate-spin" />
+          <div className="flex items-center gap-3 animate-in fade-in duration-300">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
             </div>
-            <div className="bg-zinc-900 px-4 py-2.5 rounded-2xl rounded-tl-sm border border-white/5">
-              <p className="text-xs text-zinc-400 animate-pulse">{loadingText}</p>
-            </div>
+            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest animate-pulse">{loadingText}</p>
           </div>
         )}
       </div>
 
-      {/* Chat Input */}
-      <div className="px-3 pb-4 pt-2 bg-black">
+      {/* Chat Bar */}
+      <div className="px-4 py-4 z-40 bg-gradient-to-t from-black via-black to-transparent">
         <div className="relative">
-          {/* Plus Menu */}
           {showPlusMenu && (
-            <div className="absolute bottom-full left-0 right-0 mb-3 flex justify-center gap-4 animate-in slide-in-from-bottom-2">
-              <button onClick={startCamera} className="w-14 h-14 bg-zinc-800 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-zinc-700 transition-colors">
-                <Camera className="w-5 h-5 text-emerald-400" />
-                <span className="text-[8px] text-zinc-400">拍照</span>
+            <div className="absolute bottom-full left-0 right-0 mb-4 glass rounded-[32px] p-3 flex gap-3 animate-in slide-in-from-bottom-4 duration-300">
+              <button onClick={startCamera} className="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-white/10 rounded-2xl transition-all group">
+                <div className="w-12 h-12 bg-emerald-500/10 group-active:scale-90 transition-transform rounded-2xl flex items-center justify-center text-emerald-500"><Camera className="w-6 h-6" /></div>
+                <span className="text-[9px] font-black uppercase text-zinc-400">智能相机</span>
               </button>
-              <button onClick={() => { setShowManualForm(true); setShowPlusMenu(false); }} className="w-14 h-14 bg-zinc-800 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-zinc-700 transition-colors">
-                <Edit3 className="w-5 h-5 text-amber-400" />
-                <span className="text-[8px] text-zinc-400">手动</span>
+              <button onClick={() => setShowManualForm(true)} className="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-white/10 rounded-2xl transition-all group">
+                <div className="w-12 h-12 bg-amber-500/10 group-active:scale-90 transition-transform rounded-2xl flex items-center justify-center text-amber-500"><Edit3 className="w-6 h-6" /></div>
+                <span className="text-[9px] font-black uppercase text-zinc-400">手动速记</span>
               </button>
-              <button onClick={() => galleryInputRef.current?.click()} className="w-14 h-14 bg-zinc-800 rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-zinc-700 transition-colors">
-                <ImageIcon className="w-5 h-5 text-indigo-400" />
-                <span className="text-[8px] text-zinc-400">相册</span>
+              <button onClick={() => galleryInputRef.current?.click()} className="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-white/10 rounded-2xl transition-all group">
+                <div className="w-12 h-12 bg-indigo-500/10 group-active:scale-90 transition-transform rounded-2xl flex items-center justify-center text-indigo-500"><ImageIcon className="w-6 h-6" /></div>
+                <span className="text-[9px] font-black uppercase text-zinc-400">从相册选</span>
               </button>
             </div>
           )}
 
-          {/* Input Bar */}
-          <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-2xl p-1.5">
+          <div className="glass bg-zinc-900/90 border border-white/10 rounded-[32px] p-2 flex items-center gap-2 shadow-2xl">
             <button 
               onClick={() => setShowPlusMenu(!showPlusMenu)} 
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${showPlusMenu ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${showPlusMenu ? 'bg-zinc-800 text-white rotate-45' : 'bg-white/5 text-zinc-400'}`}
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-6 h-6" />
             </button>
             
             <input 
               value={input} 
               onChange={e => setInput(e.target.value)} 
               onKeyPress={e => e.key === 'Enter' && handleSend()} 
-              placeholder="输入记账信息..." 
-              className="flex-1 bg-transparent outline-none text-sm text-white placeholder-zinc-600 py-2" 
+              placeholder="问问今天花了多少..." 
+              className="flex-1 bg-transparent outline-none text-sm font-medium px-2 py-2 text-white placeholder-zinc-600" 
             />
             
             <button 
               onClick={input.trim() ? handleSend : startVoice} 
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
                 input.trim() 
-                  ? 'bg-emerald-500 text-white' 
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
+                  : 'bg-white/5 text-zinc-400 hover:bg-white/10'
               }`}
             >
-              {input.trim() ? <Send className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {input.trim() ? <Send className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
           </div>
         </div>
