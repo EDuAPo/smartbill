@@ -118,18 +118,31 @@ const Dashboard: React.FC<Props> = ({ user, transactions, monthlyBudget, onConfi
       <section>
         <h2 className="text-lg font-bold tracking-tight mb-5 px-2">最近记录</h2>
         <div className="space-y-5 px-1">
-          {confirmed.length > 0 ? confirmed.slice(0, 5).map(tx => (
+          {confirmed.length > 0 ? confirmed.slice(0, 10).map(tx => (
             <div key={tx.id} className="flex items-center justify-between group">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <div className="w-11 h-11 bg-zinc-900 rounded-2xl flex items-center justify-center text-xl">
                   {tx.category === '餐饮' ? '☕️' : tx.category === '购物' ? '🛍️' : '🏷️'}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold group-hover:text-emerald-400 transition-colors">{tx.merchant}</h3>
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">{tx.category}</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">{tx.category} • {tx.date}</p>
                 </div>
               </div>
-              <span className="font-black text-base">- ¥{tx.amount}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-base">- ¥{tx.amount}</span>
+                <button 
+                  onClick={() => {
+                    if (window.confirm(`确定要删除 "${tx.merchant}" ¥${tx.amount} 这笔记录吗？`)) {
+                      onDelete(tx.id);
+                      showNotify('记录已删除');
+                    }
+                  }}
+                  className="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center bg-rose-500/20 text-rose-500 rounded-full hover:bg-rose-500 hover:text-white transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )) : (
             <div className="text-center py-10 text-zinc-600 text-sm italic">暂无已确认记录</div>
