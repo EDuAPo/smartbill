@@ -221,7 +221,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
   }, [showNotify, transactions]);
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden bg-black">
+    <div className="h-full flex flex-col overflow-hidden bg-black">
       <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" />
       <canvas ref={canvasRef} className="hidden" />
 
@@ -276,7 +276,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-8 space-y-8 no-scrollbar pb-44">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-8 space-y-8 no-scrollbar pb-4">
         {messages.map((m, i) => (
           <div key={i} className={`flex items-end gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             {/* Avatar */}
@@ -338,7 +338,7 @@ const AIAssistant: React.FC<Props> = ({ transactions, onAdd, showNotify }) => {
       </div>
 
       {/* Chat Bar */}
-      <div className="absolute bottom-24 left-0 right-0 px-4 z-40">
+      <div className="px-4 py-4 z-40 bg-gradient-to-t from-black via-black to-transparent">
         <div className="relative">
           {showPlusMenu && (
             <div className="absolute bottom-full left-0 right-0 mb-4 glass rounded-[32px] p-3 flex gap-3 animate-in slide-in-from-bottom-4 duration-300">
