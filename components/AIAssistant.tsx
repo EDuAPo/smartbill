@@ -361,9 +361,9 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
             </div>
 
             {/* Bubble Container */}
-            <div className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
+            <div className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%] w-auto`}>
               <div 
-                className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-lg transition-all duration-300 ${
+                className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-lg transition-all duration-300 break-words overflow-hidden ${
                   m.role === 'user' 
                     ? 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white rounded-br-none' 
                     : 'bg-zinc-900 border border-white/10 text-zinc-100 rounded-bl-none'
@@ -371,7 +371,7 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
                 style={m.role === 'ai' && m.moodColor ? { borderLeftColor: m.moodColor, borderLeftWidth: '3px' } : {}}
               >
                 {/* 使用 renderMessageText 渲染，支持金额高亮 */}
-                <p className="flex flex-wrap items-baseline gap-y-1">
+                <p className="flex flex-wrap items-baseline gap-y-1 break-words overflow-hidden max-w-full">
                   {renderMessageText(m.text)}
                 </p>
                 
