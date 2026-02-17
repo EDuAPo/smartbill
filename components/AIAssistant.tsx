@@ -178,7 +178,8 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     setLoading(true);
     setLoadingText("翻账本中...");
     try {
-      const result = await aiRef.current.parseTransaction(currentInput, transactions, monthlyBudget);
+      // 传入完整对话历史以支持上下文
+      const result = await aiRef.current.parseTransaction(currentInput, transactions, monthlyBudget, messages);
       processResponse(result);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: '断网了。估计是你的账单太惊人，把基站吓坏了。' }]);

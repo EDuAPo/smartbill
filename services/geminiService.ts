@@ -144,15 +144,33 @@ ${imageContext}
     }
   }
 
-  async parseTransaction(input: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
+  // 对话历史
+  private chatHistory: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [];
+
+  async parseTransaction(input: string, transactions: Transaction[], monthlyBudget: number = 3000, chatHistory?: Array<{role: 'user' | 'ai', text: string}>): Promise<any> {
     const currentDate = new Date().toLocaleDateString('en-CA');
     const context = this.formatTransactions(transactions, monthlyBudget);
     const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context, false);
     
-    const messages = [
-      { role: "system", content: systemInstruction },
-      { role: "user", content: input }
+    // 构建完整的对话上下文
+    const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
+      { role: "system", content: systemInstruction }
     ];
+
+    // 添加历史对话（最近10轮）
+    if (chatHistory && chatHistory.length > 0) {
+      const recentHistory = chatHistory.slice(-20); // 最近20条消息
+      for (const msg of recentHistory) {
+        if (msg.role === 'user') {
+          messages.push({ role: 'user', content: msg.text });
+        } else if (msg.role === 'ai') {
+          messages.push({ role: 'assistant', content: msg.text });
+        }
+      }
+    }
+
+    // 添加当前用户输入
+    messages.push({ role: 'user', content: input });
     
     return this.callQWen(messages);
   }
