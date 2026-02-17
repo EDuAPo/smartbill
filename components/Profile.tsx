@@ -19,16 +19,16 @@ const userService = UserService.getInstance();
 
 // 简洁头像预设 - 使用 DiceBear API 的 avataaars 风格，适合男性女性
 const AVATAR_PRESETS = [
-  // 男性风格头像
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male1&clothing=blazerAndShirt',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male2&clothing=collerAndSweater',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male3&clothing=graphicShirt',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male4&clothing=hoodie',
+  // 男性风格头像 - 使用简单可靠的种子
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=bob',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=charlie',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=david',
   // 女性风格头像
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female1&clothing=blazerAndShirt',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female2&clothing=collerAndSweater',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female3&clothing=graphicShirt',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female4&clothing=hoodie',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=alice',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=bella',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=clara',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=diana',
 ];
 
 const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, onUserUpdate }) => {
