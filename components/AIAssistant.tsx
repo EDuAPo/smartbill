@@ -188,37 +188,80 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     }
   };
 
-  const startVoice = async () => {
+  // 语音识别 refs
+  const recognitionRef = useRef<any>(null);
+  const [isListening, setIsListening] = useState(false);
+
+  // 使用 Web Speech API 进行语音识别
+  const startVoice = () => {
+    // 检查浏览器是否支持语音识别
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      showNotify("您的浏览器不支持语音识别功能", "error");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-      recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = (reader.result as string).split(',')[1];
-          setLoading(true);
-          try {
-            const result = await aiRef.current.parseMultimodal(base64Audio, 'audio/webm', transactions, monthlyBudget);
-            processResponse(result);
-          } catch (err) { showNotify("听不太清", "error"); }
-          finally { setLoading(false); }
-        };
-        stream.getTracks().forEach(t => t.stop());
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'zh-CN';
+      
+      recognition.onstart = () => {
+        setIsListening(true);
+        setRecording(true);
       };
-      recorder.start();
-      setRecording(true);
-    } catch (err) { showNotify("权限拒绝", "error"); }
+      
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        
+        if (event.results[0].isFinal) {
+          // 识别完成，发送文字
+          setInput(transcript);
+          setIsListening(false);
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('语音识别错误:', event.error);
+        setIsListening(false);
+        setRecording(false);
+        if (event.error === 'no-speech') {
+          showNotify("没有检测到语音，请再说一次", "info");
+        } else if (event.error === 'not-allowed') {
+          showNotify("麦克风权限被拒绝", "error");
+        }
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+        setRecording(false);
+      };
+      
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error('启动语音识别失败:', err);
+      showNotify("语音识别启动失败", "error");
+    }
   };
 
   const stopVoice = () => {
-    if (mediaRecorderRef.current && recording) {
-      mediaRecorderRef.current.stop();
-      setRecording(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setRecording(false);
+    setIsListening(false);
+  };
+
+  // 语音输入模式下发送消息
+  const handleVoiceSend = () => {
+    if (input.trim()) {
+      handleSend();
     }
   };
 
@@ -407,14 +450,16 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
             />
             
             <button 
-              onClick={input.trim() ? handleSend : startVoice} 
+              onClick={input.trim() ? handleSend : (recording ? stopVoice : startVoice)} 
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                input.trim() 
+                recording 
+                  ? 'bg-rose-500 text-white animate-pulse' 
+                  : input.trim() 
                   ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
                   : 'bg-white/5 text-zinc-400 hover:bg-white/10'
               }`}
             >
-              {input.trim() ? <Send className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {recording ? <StopCircle className="w-5 h-5" /> : input.trim() ? <Send className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
           </div>
         </div>
