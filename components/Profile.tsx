@@ -17,37 +17,18 @@ interface Props {
 
 const userService = UserService.getInstance();
 
-// 同风格头像预设 - 使用 DiceBear API 的不同风格
+// 简洁头像预设 - 使用 DiceBear API 的 avataaars 风格，适合男性女性
 const AVATAR_PRESETS = [
-  // 彩色渐变风格 (使用 Fun Emoji 风格)
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=1',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=2',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=3',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=4',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=5',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=6',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=7',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=8',
-  // 头像风格
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-  // 像素风格
-  'https://api.dicebear.com/7.x/pixel-art/svg?seed=1',
-  'https://api.dicebear.com/7.x/pixel-art/svg?seed=2',
-  'https://api.dicebear.com/7.x/pixel-art/svg?seed=3',
-  'https://api.dicebear.com/7.x/pixel-art/svg?seed=4',
-  // 怪物风格
-  'https://api.dicebear.com/7.x/monster/svg?seed=1',
-  'https://api.dicebear.com/7.x/monster/svg?seed=2',
-  'https://api.dicebear.com/7.x/monster/svg?seed=3',
-  'https://api.dicebear.com/7.x/monster/svg?seed=4',
-  // 素描风格
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=1',
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=2',
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=3',
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=4',
+  // 男性风格头像
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male1&clothing=blazerAndShirt',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male2&clothing=collerAndSweater',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male3&clothing=graphicShirt',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Male4&clothing=hoodie',
+  // 女性风格头像
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female1&clothing=blazerAndShirt',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female2&clothing=collerAndSweater',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female3&clothing=graphicShirt',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Female4&clothing=hoodie',
 ];
 
 const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, onUserUpdate }) => {
