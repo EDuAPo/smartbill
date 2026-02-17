@@ -104,9 +104,18 @@ ${imageContext}
     
     if (!apiKey) {
       return {
-        chat_response: "请先在设置中配置千问 API Key",
+        chat_response: `嘿，你还没配置千问 API Key 呢！没它我可没法帮你干活。
+
+配置步骤很简单：
+1. 打开阿里云DashScope：https://dashscope.console.aliyun.com/
+2. 点击"开通服务"（新人有免费额度）
+3. 左侧菜单找"API-KEY管理"
+4. 点击"创建API-KEY"，复制那串密钥
+5. 回到这里，点左上角头像 → 设置 → 粘贴密钥
+
+搞定了告诉我，咱们就开始记账！`,
         transactions: [],
-        ai_persona: { vibe_check: "困惑", mood_color: "#ffa500" }
+        ai_persona: { vibe_check: "等待配置", mood_color: "#3b82f6" }
       };
     }
 
