@@ -24,6 +24,7 @@ import Profile from './components/Profile';
 import Auth from './components/Auth';
 import { Transaction, CategoryType, User } from './types';
 import { SmartBillAI } from './services/geminiService';
+import { soundManager } from './utils/sounds';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -173,6 +174,12 @@ const AppContent: React.FC = () => {
   };
 
   const showNotify = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    // Play sound based on type
+    if (type === 'success') {
+      soundManager.playSuccess();
+    } else if (type === 'error') {
+      soundManager.playError();
+    }
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
@@ -180,6 +187,7 @@ const AppContent: React.FC = () => {
   const addTransaction = (t: Omit<Transaction, 'id'>) => {
     const newTx = { ...t, id: Math.random().toString(36).substr(2, 9) };
     setTransactions(prev => [newTx, ...prev]);
+    soundManager.playTransaction();
   };
 
   const capturePhoto = useCallback(async () => {
