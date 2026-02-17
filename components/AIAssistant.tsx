@@ -43,6 +43,7 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
   const [showManualForm, setShowManualForm] = useState(false);
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [showApiKeyGuide, setShowApiKeyGuide] = useState(false);
 
   const [mAmount, setMAmount] = useState('');
   const [mMerchant, setMMerchant] = useState('');
@@ -50,6 +51,11 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
 
   const STORAGE_KEY = 'smartbill_ai_messages';
   
+  // 检查是否设置了 API Key
+  const hasApiKey = () => {
+    return !!localStorage.getItem('qwen_api_key');
+  };
+
   const greetings = ["哟，今儿又是为哪家店的营业额做贡献了？", "还没睡？看来是今天的账单太沉，压得你睡不着？"];
   
   // Load messages from localStorage on mount
@@ -58,7 +64,8 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     text: string, 
     vibe?: string, 
     moodColor?: string,
-    data?: any[] 
+    data?: any[],
+    isApiKeyGuide?: boolean 
   }>>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -70,6 +77,9 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     }
     return [{ role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe: '待机中' }];
   });
+
+  // 判断是否需要显示 API Key 引导
+  const needsApiKeyGuide = !hasApiKey() && messages.length <= 1 && messages[0]?.role === 'ai';
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
