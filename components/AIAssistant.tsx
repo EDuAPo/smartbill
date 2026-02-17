@@ -436,9 +436,9 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
           <div className="glass bg-zinc-900/90 border border-white/10 rounded-[32px] p-2 flex items-center gap-2 shadow-2xl">
             <button 
               onClick={() => setShowPlusMenu(!showPlusMenu)} 
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${showPlusMenu ? 'bg-zinc-800 text-white rotate-45' : 'bg-white/5 text-zinc-400'}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${showPlusMenu ? 'bg-zinc-800 text-white rotate-45' : 'bg-white/5 text-zinc-400'}`}
             >
-              <Plus className="w-6 h-6" />
+              <Plus className="w-5 h-5" />
             </button>
             
             <input 
@@ -446,13 +446,23 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
               onChange={e => setInput(e.target.value)} 
               onKeyPress={e => e.key === 'Enter' && handleSend()} 
               placeholder="问问今天花了多少..." 
-              className="flex-1 bg-transparent outline-none text-sm font-medium px-2 py-2 text-white placeholder-zinc-600" 
+              className="flex-1 bg-transparent outline-none text-sm font-medium px-2 py-2 text-white placeholder-zinc-600 min-w-0" 
             />
             
+            {/* Voice Button - Always visible */}
             <button 
-              onClick={recording ? stopVoice : startVoice} 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (recording) {
+                  stopVoice();
+                } else {
+                  startVoice();
+                }
+              }}
               disabled={loading}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
                 recording 
                   ? 'bg-rose-500 text-white animate-pulse' 
                   : 'bg-white/5 text-zinc-400 hover:bg-white/10'
@@ -460,11 +470,18 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
             >
               {recording ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
+            
+            {/* Send Button - Only visible when there's text */}
             {input.trim() && (
               <button 
-                onClick={handleSend}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSend();
+                }}
                 disabled={loading}
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 bg-emerald-500 text-white"
               >
                 <Send className="w-5 h-5" />
               </button>
