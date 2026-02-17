@@ -414,10 +414,10 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
       </div>
 
       {/* Chat Bar */}
-      <div className="px-4 pb-6 pt-1 z-40 bg-black">
+      <div className="px-4 py-4 z-40 bg-gradient-to-t from-black via-black to-transparent">
         <div className="relative">
           {showPlusMenu && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 glass rounded-[32px] p-2 flex gap-2 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="absolute bottom-full left-0 right-0 mb-4 glass rounded-[32px] p-3 flex gap-3 animate-in slide-in-from-bottom-4 duration-300">
               <button onClick={startCamera} className="flex-1 py-4 flex flex-col items-center gap-2 hover:bg-white/10 rounded-2xl transition-all group">
                 <div className="w-12 h-12 bg-emerald-500/10 group-active:scale-90 transition-transform rounded-2xl flex items-center justify-center text-emerald-500"><Camera className="w-6 h-6" /></div>
                 <span className="text-[9px] font-black uppercase text-zinc-400">智能相机</span>
