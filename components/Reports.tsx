@@ -66,17 +66,95 @@ const Reports: React.FC<Props> = ({ transactions, monthlyBudget, setMonthlyBudge
     })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
   }, [confirmedOnly]);
 
-  const healthScore = useMemo(() => {
-    if (stats.total === 0) return 100;
-    const ratio = stats.total / monthlyBudget;
-    if (ratio < 0.5) return 95;
-    if (ratio < 0.8) return 80;
-    if (ratio < 1) return 60;
-    return 35;
-  }, [stats.total, monthlyBudget]);
-
   const remaining = monthlyBudget - stats.total;
   const progressPercent = Math.min((stats.total / monthlyBudget) * 100, 100);
+
+  // 真实的健康评分计算
+  const healthScore = useMemo(() => {
+    if (confirmedOnly.length === 0) return 100;
+    const ratio = stats.total / monthlyBudget;
+    if (ratio < 0.5) return 95;
+    if (ratio < 0.7) return 85;
+    if (ratio < 0.85) return 70;
+    if (ratio < 1) return 55;
+    return 30;
+  }, [stats.total, monthlyBudget, confirmedOnly.length]);
+
+  // 基于真实数据的 AI 评估
+  const aiAssessment = useMemo(() => {
+    if (confirmedOnly.length === 0) {
+      return {
+        score: 100,
+        title: '记账新手',
+        message: '还没有任何消费记录，开始记账吧，让 AI 帮你分析财务状况！',
+        tips: ['点击底部 + 按钮添加第一笔消费', '支持语音、拍照识别账单']
+      };
+    }
+
+    const ratio = stats.total / monthlyBudget;
+    const topCategory = categoryData[0];
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const daysPassed = new Date().getDate();
+    const expectedSpent = (monthlyBudget / daysInMonth) * daysPassed;
+    const dailyAvg = stats.total / daysPassed;
+    
+    const tips: string[] = [];
+    let title = '';
+    let message = '';
+
+    // 基于实际情况生成建议
+    if (ratio < 0.5) {
+      title = '省钱达人';
+      message = `本月已消费 ¥${stats.total.toFixed(0)}，只用了 ${(ratio * 100).toFixed(0)}% 的预算`;
+      if (topCategory) {
+        tips.push(`主要支出是${topCategory.name}，共 ¥${topCategory.value.toFixed(0)}`);
+      }
+      tips.push('继续保持！可以适当享受一下');
+    } else if (ratio < 0.75) {
+      title = '消费理性';
+      message = `本月已消费 ¥${stats.total.toFixed(0)}，预算使用 ${(ratio * 100).toFixed(0)}%`;
+      if (topCategory) {
+        tips.push(`${topCategory.name}占比最高，达 ¥${topCategory.value.toFixed(0)}`);
+      }
+      tips.push('日均消费 ¥' + dailyAvg.toFixed(0) + '，注意保持');
+    } else if (ratio < 0.9) {
+      title = '预算预警';
+      message = `本月已消费 ¥${stats.total.toFixed(0)}，预算剩余不多`;
+      tips.push('⚠️ 本月剩余预算仅 ¥' + Math.max(0, remaining).toFixed(0));
+      tips.push('日均 ¥' + dailyAvg.toFixed(0) + '，建议控制消费');
+      if (topCategory) {
+        tips.push('减少' + topCategory.name + '类开支可有效节流');
+      }
+    } else if (ratio < 1) {
+      title = '预算紧张';
+      message = `本月已消费 ¥${stats.total.toFixed(0)}，即将超支！`;
+      tips.push('🚨 剩余预算仅 ¥' + Math.max(0, remaining).toFixed(0));
+      tips.push('建议立即调整消费习惯');
+      if (topCategory) {
+        tips.push(topCategory.name + '支出过高，需重点关注');
+      }
+    } else {
+      title = '预算超支';
+      message = `本月已消费 ¥${stats.total.toFixed(0)}，超出预算 ¥${Math.abs(remaining).toFixed(0)}`;
+      tips.push('❌ 已超支 ¥' + Math.abs(remaining).toFixed(0));
+      tips.push('建议设置下月预算时降低 20%');
+      if (topCategory) {
+        tips.push(topCategory.name + '是最大支出项');
+      }
+    }
+
+    // 添加趋势对比
+    if (expectedSpent > 0) {
+      const trend = (stats.total - expectedSpent) / expectedSpent;
+      if (trend > 0.2) {
+        tips.push('📈 消费速度高于预期');
+      } else if (trend < -0.2) {
+        tips.push('📉 消费控制良好');
+      }
+    }
+
+    return { score: healthScore, title, message, tips };
+  }, [confirmedOnly, stats, monthlyBudget, remaining, categoryData, healthScore]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500 pb-32">
