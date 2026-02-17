@@ -18,7 +18,16 @@ const Dashboard: React.FC<Props> = ({ user, transactions, monthlyBudget, onConfi
   const pending = transactions.filter(t => t.needConfirmation);
   const confirmed = transactions.filter(t => !t.needConfirmation);
 
-  const totalSpent = confirmed.reduce((sum, t) => sum + t.amount, 0);
+  // 只计算支出（排除收入）
+  const totalSpent = confirmed
+    .filter(t => t.category !== '收入')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  // 计算收入
+  const totalIncome = confirmed
+    .filter(t => t.category === '收入')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
   const remaining = Math.max(0, monthlyBudget - totalSpent);
   const progress = Math.min(100, (totalSpent / monthlyBudget) * 100);
 
@@ -115,7 +124,9 @@ const Dashboard: React.FC<Props> = ({ user, transactions, monthlyBudget, onConfi
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="font-black text-lg">¥{tx.amount}</span>
+                  <span className={`font-black text-lg ${tx.category === '收入' ? 'text-emerald-400' : ''}`}>
+                    {tx.category === '收入' ? '+' : ''}¥{tx.amount}
+                  </span>
                   <div className="flex gap-2">
                     <button onClick={() => onDelete(tx.id)} className="w-9 h-9 flex items-center justify-center bg-zinc-900 text-rose-500 rounded-full"><X className="w-4 h-4" /></button>
                     <button onClick={() => onConfirm(tx.id)} className="w-9 h-9 flex items-center justify-center bg-zinc-900 text-emerald-500 rounded-full"><Check className="w-4 h-4" /></button>
@@ -143,7 +154,9 @@ const Dashboard: React.FC<Props> = ({ user, transactions, monthlyBudget, onConfi
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-black text-base">- ¥{tx.amount}</span>
+                <span className={`font-black text-base ${tx.category === '收入' ? 'text-emerald-400' : 'text-white'}`}>
+                  {tx.category === '收入' ? '+' : '-'}¥{tx.amount}
+                </span>
                 <button 
                   onClick={() => {
                     if (window.confirm(`确定要删除 "${tx.merchant}" ¥${tx.amount} 这笔记录吗？`)) {

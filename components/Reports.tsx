@@ -36,9 +36,11 @@ const Reports: React.FC<Props> = ({ transactions, monthlyBudget, setMonthlyBudge
   const rollerRef = useRef<HTMLDivElement>(null);
 
   const stats = useMemo(() => {
-    const total = confirmedOnly.reduce((sum, t) => sum + t.amount, 0);
-    const avg = confirmedOnly.length > 0 ? total / 30 : 0;
-    const max = confirmedOnly.length > 0 ? Math.max(...confirmedOnly.map(t => t.amount)) : 0;
+    // 只计算支出（排除收入）
+    const expenses = confirmedOnly.filter(t => t.category !== '收入');
+    const total = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const avg = expenses.length > 0 ? total / 30 : 0;
+    const max = expenses.length > 0 ? Math.max(...expenses.map(t => t.amount)) : 0;
     return { total, avg, max };
   }, [confirmedOnly]);
 
@@ -60,7 +62,9 @@ const Reports: React.FC<Props> = ({ transactions, monthlyBudget, setMonthlyBudge
   }, []);
 
   const categoryData = useMemo(() => {
-    return Object.values(CategoryType).map(cat => ({
+    // 排除收入分类
+    const expenseCategories = Object.values(CategoryType).filter(cat => cat !== CategoryType.INCOME);
+    return expenseCategories.map(cat => ({
       name: cat,
       value: confirmedOnly.filter(t => t.category === cat).reduce((sum, t) => sum + t.amount, 0)
     })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
