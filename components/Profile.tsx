@@ -19,16 +19,16 @@ const userService = UserService.getInstance();
 
 // 简洁头像预设 - 使用 DiceBear API 的 avataaars 风格，表情积极开心
 const AVATAR_PRESETS = [
-  // 男性风格头像 - 使用开心表情的种子
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy1&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy2&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy3&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy4&mouth smile',
-  // 女性风格头像 - 使用开心表情的种子
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=joy1&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=joy2&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=joy3&mouth smile',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=joy4&mouth smile',
+  // 男性风格头像 - 使用开心表情
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=smile1&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=smile2&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=smile3&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=smile4&mouth=smile',
+  // 女性风格头像 - 使用开心表情
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy1&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy2&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy3&mouth=smile',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=happy4&mouth=smile',
 ];
 
 const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, onUserUpdate }) => {
