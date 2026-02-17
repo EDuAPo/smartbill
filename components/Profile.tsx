@@ -17,10 +17,44 @@ interface Props {
 
 const userService = UserService.getInstance();
 
+// 同风格头像预设 - 使用 DiceBear API 的不同风格
+const AVATAR_PRESETS = [
+  // 彩色渐变风格 (使用 Fun Emoji 风格)
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=1',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=2',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=3',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=4',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=5',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=6',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=7',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=8',
+  // 头像风格
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+  // 像素风格
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=1',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=2',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=3',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=4',
+  // 怪物风格
+  'https://api.dicebear.com/7.x/monster/svg?seed=1',
+  'https://api.dicebear.com/7.x/monster/svg?seed=2',
+  'https://api.dicebear.com/7.x/monster/svg?seed=3',
+  'https://api.dicebear.com/7.x/monster/svg?seed=4',
+  // 素描风格
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=1',
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=2',
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=3',
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=4',
+];
+
 const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, onUserUpdate }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState(user.nickname);
   const [loading, setLoading] = useState<string | null>(null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   
   // 模拟同步设置（真实应用中应存储在 user 对象或单独的 settings 表）
   const [syncEnabled, setSyncEnabled] = useState(true);
@@ -80,11 +114,55 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
     showNotify(nextState ? '自动同步已开启' : '自动同步已关闭', 'info');
   };
 
+  const handleSelectAvatar = async (avatarUrl: string) => {
+    setLoading('avatar');
+    try {
+      const updated = await userService.updateProfile({ avatar: avatarUrl });
+      onUserUpdate(updated);
+      showNotify('头像更新成功', 'success');
+      setShowAvatarPicker(false);
+    } catch (err) {
+      showNotify('更新失败', 'error');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in slide-in-from-right duration-500 pb-24">
+      {/* Avatar Picker Modal */}
+      {showAvatarPicker && (
+        <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="w-full max-w-sm glass rounded-[32px] p-6 border border-white/10 animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-black">选择头像</h3>
+              <button onClick={() => setShowAvatarPicker(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto">
+              {AVATAR_PRESETS.map((avatar, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSelectAvatar(avatar)}
+                  className={`aspect-square rounded-xl overflow-hidden bg-zinc-900 border-2 transition-all hover:scale-105 ${
+                    user.avatar === avatar ? 'border-emerald-500' : 'border-transparent'
+                  }`}
+                >
+                  <img src={avatar} alt={`avatar-${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="flex flex-col items-center">
         <div className="relative group">
-          <div className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-emerald-400 to-indigo-500 p-1 mb-4 shadow-2xl shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-500">
+          <button 
+            onClick={() => setShowAvatarPicker(true)}
+            className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-emerald-400 to-indigo-500 p-1 mb-4 shadow-2xl shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-500"
+          >
             <div className="w-full h-full rounded-[28px] bg-black flex items-center justify-center overflow-hidden">
                {user.avatar ? (
                  <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
@@ -92,7 +170,7 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
                  <UserIcon className="w-10 h-10 text-white/20" />
                )}
             </div>
-          </div>
+          </button>
           <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
             {user.loginMethod === 'wechat' ? (
               <MessageCircle className="w-4 h-4 text-[#07C160]" fill="#07C160" />
