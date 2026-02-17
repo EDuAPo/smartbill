@@ -450,17 +450,25 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
             />
             
             <button 
-              onClick={input.trim() ? handleSend : (recording ? stopVoice : startVoice)} 
+              onClick={recording ? stopVoice : startVoice} 
+              disabled={loading}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
                 recording 
                   ? 'bg-rose-500 text-white animate-pulse' 
-                  : input.trim() 
-                  ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
                   : 'bg-white/5 text-zinc-400 hover:bg-white/10'
               }`}
             >
-              {recording ? <StopCircle className="w-5 h-5" /> : input.trim() ? <Send className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {recording ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
+            {input.trim() && (
+              <button 
+                onClick={handleSend}
+                disabled={loading}
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
