@@ -28,19 +28,18 @@ export class SmartBillAI {
       `- ${t.date} | ${t.merchant} | ${t.category} | ¥${t.amount}`
     ).join('\n');
 
-    let budgetInfo = "";
-    if (transactions.length > 0) {
-      budgetInfo = `
+    // 始终显示预算信息，即使没有交易记录
+    const budgetInfo = `
 # 本月预算信息
 - 月度预算: ¥${monthlyBudget}
 - 本月已消费: ¥${monthTotal}
 - 剩余可用: ¥${remaining}
 - 预算使用进度: ${Math.round((monthTotal / monthlyBudget) * 100)}%
 `;
-    }
 
     return `
-# 当前财务概况 (日期: ${today})${budgetInfo}
+# 当前财务概况 (日期: ${today})
+${budgetInfo}
 - 今日已确认支出: ¥${todayTotal}
 - 今日明细: ${todayList.map(t => `${t.merchant}(¥${t.amount})`).join(', ') || '无'}
 - 最近10笔记录:
