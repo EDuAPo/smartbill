@@ -1,101 +1,139 @@
 import { CategoryType, Transaction } from "../types";
 
-// API 配置
 const QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
-// 获取 API Key
 function getQWenApiKey(): string {
   return localStorage.getItem("qwen_api_key") || "";
 }
 
-export class SmartBillAI {
-  private formatTransactions(transactions: Transaction[], monthlyBudget: number) {
-    const today = new Date().toLocaleDateString('en-CA');
-    const currentMonth = today.substring(0, 7);
-    
-    const monthExpenses = transactions.filter(t => 
-      t.date.startsWith(currentMonth) && 
-      !t.needConfirmation && 
-      t.category !== '收入'
-    );
-    const monthTotal = monthExpenses.reduce((sum, t) => sum + t.amount, 0);
-    const remaining = monthlyBudget - monthTotal;
-    
-    const todayList = transactions.filter(t => t.date === today && !t.needConfirmation);
-    const todayTotal = todayList.reduce((sum, t) => sum + t.amount, 0);
-    
-    const recent = transactions.slice(0, 10).map(t => 
-      `- ${t.date} | ${t.merchant} | ${t.category} | ¥${t.amount}`
-    ).join('\n');
-
-    // 始终显示预算信息，即使没有交易记录
-    const budgetInfo = `
-# 本月预算信息
-- 月度预算: ¥${monthlyBudget}
-- 本月已消费: ¥${monthTotal}
-- 剩余可用: ¥${remaining}
-- 预算使用进度: ${Math.round((monthTotal / monthlyBudget) * 100)}%
-`;
-
-    return `
-# 当前财务概况 (日期: ${today})
-${budgetInfo}
-- 今日已确认支出: ¥${todayTotal}
-- 今日明细: ${todayList.map(t => `${t.merchant}(¥${t.amount})`).join(', ') || '无'}
-- 最近10笔记录:
-${recent || '暂无'}
-`;
+function safeNum(n: number | undefined | null, fallback: number = 0): number {
+  if (typeof n !== 'number' || isNaN(n) || !isFinite(n)) {
+    return fallback;
   }
+  return n;
+}
 
-  private getSystemInstruction(monthlyBudget: number, currentDate: string, context: string, isImageAnalysis: boolean = false, imageUrl?: string) {
-    const imageContext = isImageAnalysis && imageUrl
-      ? `\n# 图片分析任务\n图片URL: ${imageUrl}\n请分析这张图片。如果图片是账单（小票、收据、发票等），请提取所有交易信息；如果不是账单（如风景照、人物照、表情包），请返回空transactions并友好地回复用户。`
-      : isImageAnalysis
-      ? `\n# 图片分析任务\n请分析用户提供的图片。如果图片是账单（小票、收据、发票等），请提取所有交易信息；如果不是账单，请返回空transactions并友好地回复用户。`
-      : "";
-      
-    return `你叫"财伴"，是一个清醒、毒舌但内心温暖的财务损友。
-你存在的唯一目的是帮用户看住钱包，并在他乱花钱时狠狠吐槽。
+function isIncomeCategory(category: string): boolean {
+  return category === '收入' || category === CategoryType.INCOME || category.includes('收');
+}
 
-# 核心性格
-- **绝对禁语**：禁止说"好的"、"已记录"、"为您服务"、"作为AI助手"。
-- **说话风格**：短句为主，多用反问和生活化比喻。像个在微信上秒回的朋友。
+function formatTransactionsWithSign(transactions: Transaction[], monthlyBudget: number) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const currentMonth = today.substring(0, 7);
+  const budget = safeNum(monthlyBudget, 0);
+  
+  const monthConfirmed = transactions.filter(t => 
+    t.date && t.date.startsWith(currentMonth) && !t.needConfirmation
+  );
+  
+  const monthExpenses = monthConfirmed.filter(t => !isIncomeCategory(t.category));
+  const monthExpenseTotal = safeNum(monthExpenses.reduce((sum, t) => sum + safeNum(t.amount), 0));
+  
+  const monthIncome = monthConfirmed.filter(t => isIncomeCategory(t.category));
+  const monthIncomeTotal = safeNum(monthIncome.reduce((sum, t) => sum + safeNum(t.amount), 0));
+  
+  const netAmount = monthIncomeTotal - monthExpenseTotal;
+  const remaining = budget - monthExpenseTotal;
+  
+  const todayConfirmed = monthConfirmed.filter(t => t.date === today);
+  const todayExpense = todayConfirmed.filter(t => !isIncomeCategory(t.category));
+  const todayExpenseTotal = safeNum(todayExpense.reduce((sum, t) => sum + safeNum(t.amount), 0));
+  const todayIncome = todayConfirmed.filter(t => isIncomeCategory(t.category));
+  const todayIncomeTotal = safeNum(todayIncome.reduce((sum, t) => sum + safeNum(t.amount), 0));
+  
+  const recent = transactions.slice(0, 10).map(t => {
+    const sign = isIncomeCategory(t.category) ? '+' : '-';
+    const amount = safeNum(t.amount, 0);
+    return `${t.date || '未知'} | ${t.merchant || '未知'} | ${t.category} | ${sign}¥${amount}`;
+  }).join('\n');
 
-# 通用对话能力
-你不仅仅是一个记账助手，你还可以：
-- 回答用户关于如何获取千问API Key的问题
-- 聊天、陪伴、解答日常问题
-- 当用户问及API Key获取方法时，耐心指导：
-  1. 访问阿里云DashScope官网（https://dashscope.console.aliyun.com/）
-  2. 注册/登录阿里云账号
-  3. 开通千问VL Plus模型
-  4. 在"API-KEY管理"中创建密钥
-  5. 复制密钥到设置页面粘贴
+  const categoryBreakdown = monthExpenses.reduce((acc, t) => {
+    const cat = t.category;
+    acc[cat] = (acc[cat] || 0) + safeNum(t.amount);
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const topCategories = Object.entries(categoryBreakdown)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([cat, amount]) => `${cat}: ¥${safeNum(amount, 0)}`)
+    .join('\n');
 
-# 账单上下文使用指南
-你现在可以获取用户的历史账单数据（见下文）。
-- 如果用户询问"今天花了多少"、"昨天买了什么"或"最近消费情况"，你必须查阅上下文并给出准确回复。
-- 在回复具体金额时，保持毒舌。例如："你今天已经挥霍了 ¥500 了，其中那顿 ¥300 的火锅是认真的吗？"
-- 如果用户问及你没看到的数据，直接告诉他你还没记呢。
+  // 收入分类统计
+  const incomeBreakdown = monthIncome.reduce((acc, t) => {
+    const cat = t.category;
+    acc[cat] = (acc[cat] || 0) + safeNum(t.amount);
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const topIncome = Object.entries(incomeBreakdown)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([cat, amount]) => `${cat}: +¥${safeNum(amount, 0)}`)
+    .join('\n');
 
-${context}
-${imageContext}
+  return {
+    today,
+    currentMonth,
+    monthlyBudget: budget,
+    monthExpenseTotal,
+    monthIncomeTotal,
+    netAmount,
+    remaining,
+    usagePercent: budget > 0 ? Math.round((monthExpenseTotal / budget) * 100) : 0,
+    todayExpenseTotal,
+    todayIncomeTotal,
+    recentTransactions: recent || '暂无记录',
+    categoryBreakdown: topCategories || '暂无支出数据',
+    incomeBreakdown: topIncome || '暂无收入数据'
+  };
+}
 
-# 交易识别逻辑
-1. **意图分类**：
-   - 【查询型】：用户在问自己的财务状况。直接根据上下文回复，不需要生成 transactions 数组。
-   - 【记账型】：包含[具体动作] + [明确金额]。如果金额是入账性质，设为"收入"分类。
-   - 【图片分析型】：用户上传了图片。如果是账单，提取数据；如果不是账单，transactions为空数组。
-   - 【通用对话型】：用户问的是财务之外的问题（如API怎么获取、日常聊天等），直接回复，不需要生成transactions。
-   - 【感慨型】：纯吐槽。
-2. **输出结构**：必须返回严格的 JSON。如果是查询型或通用对话型且没有新账单，transactions 设为空数组 []。
+export class SmartBillAI {
+  private getSystemPrompt(context: any) {
+    const budget = safeNum(context.monthlyBudget, 0);
+    const expense = safeNum(context.monthExpenseTotal, 0);
+    const income = safeNum(context.monthIncomeTotal, 0);
+    const net = safeNum(context.netAmount, 0);
+    const remain = safeNum(context.remaining, 0);
+    const percent = safeNum(context.usagePercent, 0);
+    const todayExpense = safeNum(context.todayExpenseTotal, 0);
+    const todayIncome = safeNum(context.todayIncomeTotal, 0);
+    
+    return `你叫"财伴"，是用户的智能财务管家。
 
-# 输出结构 JSON
+## 核心功能
+1. 智能记账：识别收入和支出
+2. 预算查询：回答还能花多少
+3. 财务分析：分析消费习惯
+
+## 金额规则（必须严格遵守）
+- 收入金额：正数，如：工资5000
+- 支出金额：正数，如：吃饭50
+- 必须用 "is_income": true 表示收入，false 表示支出
+
+## 财务数据
+今天是 ${context.today}，本月（${context.currentMonth}）：
+- 月度预算：¥${budget}
+- 本月支出：¥${expense}
+- 本月收入：¥${income}
+- 净收支：¥${net} (正数=盈利，负数=赤字)
+- 剩余可用：¥${remain}
+- 预算使用：${percent}%
+- 今日支出：¥${todayExpense}
+- 今日收入：¥${todayIncome}
+
+支出分类：${context.categoryBreakdown}
+收入分类：${context.incomeBreakdown}
+
+## 输出格式（必须是JSON）
 {
-  "chat_response": "回复话语",
-  "transactions": [ { "amount": number, "category": "餐饮/购物/交通/娱乐/住房/医疗/教育/收入/其他", "merchant": "商户名", "date": "YYYY-MM-DD" } ],
-  "ai_persona": { "vibe_check": "情绪标签", "mood_color": "16进制颜色" }
-}`;
+  "chat_response": "回复用户的话",
+  "transactions": [] 或 [{"amount": 金额, "category": "分类", "merchant": "描述", "date": "YYYY-MM-DD", "is_income": true/false}],
+  "ai_persona": {"vibe_check": "情绪标签", "mood_color": "#颜色"}
+}
+
+重要：金额必须是有效数字，不能是NaN！`;
   }
 
   private async callQWen(messages: any[]): Promise<any> {
@@ -103,16 +141,7 @@ ${imageContext}
     
     if (!apiKey) {
       return {
-        chat_response: `嘿，你还没配置千问 API Key 呢！没它我可没法帮你干活。
-
-配置步骤很简单：
-1. 打开阿里云DashScope：https://dashscope.console.aliyun.com/
-2. 点击"开通服务"（新人有免费额度）
-3. 左侧菜单找"API-KEY管理"
-4. 点击"创建API-KEY"，复制那串密钥
-5. 回到这里，点左上角头像 → 设置 → 粘贴密钥
-
-搞定了告诉我，咱们就开始记账！`,
+        chat_response: `Hey~ 你还没配置千问 API Key 呢！\n\n配置步骤：\n1. 阿里云DashScope创建API Key\n2. 回来设置页粘贴\n\n搞定告诉我！💰`,
         transactions: [],
         ai_persona: { vibe_check: "等待配置", mood_color: "#3b82f6" }
       };
@@ -126,22 +155,36 @@ ${imageContext}
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "qwen-vl-plus",
+          model: "qwen-plus",
           messages: messages,
-          response_format: {
-            type: "json_object"
-          }
+          temperature: 0.7
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error?.message || "API request failed");
+        throw new Error(errorData.message || errorData.error?.message || "API请求失败");
       }
 
       const data = await response.json();
       const content = data.choices[0].message.content;
-      return JSON.parse(content);
+      
+      // 尝试解析JSON
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      } catch (e) {
+        // 如果解析失败，返回文本
+      }
+      
+      // 如果不是JSON格式，返回文本响应
+      return {
+        chat_response: content,
+        transactions: [],
+        ai_persona: { vibe_check: "正常", mood_color: "#10b981" }
+      };
     } catch (e: any) {
       console.error("QWen API Error:", e);
       return {
@@ -152,22 +195,22 @@ ${imageContext}
     }
   }
 
-  // 对话历史
-  private chatHistory: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [];
-
-  async parseTransaction(input: string, transactions: Transaction[], monthlyBudget: number = 3000, chatHistory?: Array<{role: 'user' | 'ai', text: string}>): Promise<any> {
-    const currentDate = new Date().toLocaleDateString('en-CA');
-    const context = this.formatTransactions(transactions, monthlyBudget);
-    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context, false);
+  async parseTransaction(
+    input: string, 
+    transactions: Transaction[], 
+    monthlyBudget: number = 3000, 
+    chatHistory?: Array<{role: 'user' | 'ai', text: string}>
+  ): Promise<any> {
     
-    // 构建完整的对话上下文
-    const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [
-      { role: "system", content: systemInstruction }
+    const context = formatTransactionsWithSign(transactions, monthlyBudget);
+    const systemPrompt = this.getSystemPrompt(context);
+    
+    const messages: any[] = [
+      { role: "system", content: systemPrompt }
     ];
 
-    // 添加历史对话（最近10轮）
     if (chatHistory && chatHistory.length > 0) {
-      const recentHistory = chatHistory.slice(-20); // 最近20条消息
+      const recentHistory = chatHistory.slice(-6);
       for (const msg of recentHistory) {
         if (msg.role === 'user') {
           messages.push({ role: 'user', content: msg.text });
@@ -177,33 +220,39 @@ ${imageContext}
       }
     }
 
-    // 添加当前用户输入
     messages.push({ role: 'user', content: input });
     
     return this.callQWen(messages);
   }
 
-  async parseMultimodal(data: string, mimeType: string, transactions: Transaction[], monthlyBudget: number = 3000): Promise<any> {
-    const currentDate = new Date().toLocaleDateString('en-CA');
-    const context = this.formatTransactions(transactions, monthlyBudget);
-    const systemInstruction = this.getSystemInstruction(monthlyBudget, currentDate, context, true);
+  async parseMultimodal(
+    data: string, 
+    mimeType: string, 
+    transactions: Transaction[], 
+    monthlyBudget: number = 3000
+  ): Promise<any> {
+    const context = formatTransactionsWithSign(transactions, monthlyBudget);
     
-    // 千问 VL 支持直接传入图片 base64
+    const systemPrompt = `你是一个智能账单识别助手。
+
+## 金额规则
+- 收入：正数 + is_income: true
+- 支出：正数 + is_income: false
+
+## 输出格式
+{
+  "chat_response": "简短回复",
+  "transactions": [{"amount": 金额, "is_income": true/false, "category": "分类", "merchant": "描述", "date": "YYYY-MM-DD"}] 或 [],
+  "ai_persona": {"vibe_check": "标签", "mood_color": "#颜色"}
+}`;
+
     const messages = [
-      { role: "system", content: systemInstruction },
+      { role: "system", content: systemPrompt },
       {
         role: "user",
         content: [
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${mimeType};base64,${data}`
-            }
-          },
-          {
-            type: "text",
-            text: "请分析这张图片，提取账单信息"
-          }
+          { type: "image_url", image_url: { url: `data:${mimeType};base64,${data}` } },
+          { type: "text", text: "请分析这张图片" }
         ]
       }
     ];
@@ -212,7 +261,14 @@ ${imageContext}
   }
 }
 
-// API Key 管理方法
+export function setQWenApiKey(apiKey: string) {
+  localStorage.setItem("qwen_api_key", apiKey);
+}
+
+export function getQWenApiKeyStored(): string {
+  return localStorage.getItem("qwen_api_key") || "";
+}
+
 export function setDeepSeekApiKey(apiKey: string) {
   localStorage.setItem("deepseek_api_key", apiKey);
 }
@@ -227,13 +283,4 @@ export function setOpenAIApiKey(apiKey: string) {
 
 export function getOpenAIApiKeyStored(): string {
   return localStorage.getItem("openai_api_key") || "";
-}
-
-// 千问 API Key 方法
-export function setQWenApiKey(apiKey: string) {
-  localStorage.setItem("qwen_api_key", apiKey);
-}
-
-export function getQWenApiKeyStored(): string {
-  return localStorage.getItem("qwen_api_key") || "";
 }
