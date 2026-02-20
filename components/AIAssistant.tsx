@@ -5,11 +5,11 @@ import { Transaction, CategoryType } from '../types';
 import { 
   Camera, Sparkles,
   X, Plus, Mic, Edit3, Image as ImageIcon, Loader2, Send, ChevronLeft, 
-  User as UserIcon, TrendingUp, TrendingDown, Volume2
+  User as UserIcon, TrendingUp, TrendingDown, Volume2, MicOff
 } from 'lucide-react';
 
 interface Props {
-  user: { nickname: string; avatar?: string; };
+  user: { nickname: string; avatar?: string; phone?: string };
   transactions: Transaction[];
   monthlyBudget: number;
   onAdd: (t: Omit<Transaction, 'id'>) => void;
@@ -40,12 +40,11 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
   const [loadingText, setLoadingText] = useState('财伴在思考中...');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   
-  // 语音状态
+  // 语音状态 - 改为点击模式
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setRecordingText] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
   const [showRecordingUI, setShowRecordingUI] = useState(false);
-  const [isMouseDown, setIsMouseDown] = useState(false);
   
   const [showManualForm, setShowManualForm] = useState(false);
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
@@ -54,7 +53,9 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
   const [mCategory, setMCategory] = useState<CategoryType>(CategoryType.OTHER);
   const [mIsIncome, setMIsIncome] = useState(false);
 
-  const STORAGE_KEY = 'smartbill_ai_messages';
+  // 使用手机号作为存储key的一部分
+  const userPhone = user?.phone || '';
+  const STORAGE_KEY = userPhone ? `smartbill_ai_messages_${userPhone}` : 'smartbill_ai_messages';
   
   const greetings = [
     "嗨！我是财伴，你的智能财务管家～有啥财务问题尽管问我！",
@@ -81,9 +82,10 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     return [{ role: 'ai', text: greetings[Math.floor(Math.random() * greetings.length)], vibe_check: '聊天' }];
   });
 
+  // 保存消息到对应手机号
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+  }, [messages, STORAGE_KEY]);
 
   const aiRef = useRef(new SmartBillAI());
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -118,10 +120,14 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 网页版：按下开始，松开结束
-  const handleMouseDown = () => { setIsMouseDown(true); startRecording(); };
-  const handleMouseUp = () => { if (isMouseDown) { setIsMouseDown(false); stopRecording(); } };
-  const handleMouseLeave = () => { if (isMouseDown) { setIsMouseDown(false); cancelRecording(); } };
+  // 点击开始/结束录音 - 适合移动端
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   const startRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -147,31 +153,41 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
       
       recognition.onerror = (event: any) => {
         console.error('语音识别错误:', event.error);
-        if (event.error !== 'no-speech') { setIsRecording(false); setShowRecordingUI(false); }
+        if (event.error !== 'no-speech') { 
+          setIsRecording(false); 
+          setShowRecordingUI(false);
+          showNotify("语音识别出错", "error");
+        }
+      };
+      
+      recognition.onend = () => {
+        // 保持状态直到用户手动停止
       };
       
       recognitionRef.current = recognition;
       recognition.start();
-    } catch (err) { showNotify("语音识别启动失败", "error"); }
+    } catch (err) { 
+      showNotify("语音识别启动失败", "error"); 
+    }
   };
 
   const stopRecording = () => {
     if (recognitionRef.current) { recognitionRef.current.stop(); recognitionRef.current = null; }
     setIsRecording(false);
     
+    // 发送识别结果
     if (recordingText.trim()) {
       setInput(recordingText);
-      setTimeout(() => { if (recordingText.trim()) handleSend(recordingText); }, 300);
+      // 自动发送
+      setTimeout(() => { 
+        if (recordingText.trim()) handleSend(recordingText); 
+      }, 500);
     }
-    setTimeout(() => { setShowRecordingUI(false); setRecordingText(''); }, 500);
-  };
-
-  const cancelRecording = () => {
-    if (recognitionRef.current) { recognitionRef.current.stop(); recognitionRef.current = null; }
-    setIsRecording(false);
-    setRecordingText('');
-    setShowRecordingUI(false);
-    showNotify("已取消录音", "info");
+    
+    setTimeout(() => { 
+      setShowRecordingUI(false); 
+      setRecordingText(''); 
+    }, 1000);
   };
 
   const mapCategory = (catStr: string): CategoryType => {
@@ -309,12 +325,12 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
           
           {recordingText && <div className="mt-4 px-8 text-center text-zinc-300 max-w-[80%]">{recordingText}</div>}
           
-          {/* 取消按钮 */}
+          {/* 停止录音按钮 */}
           <button 
-            onClick={cancelRecording}
-            className="absolute bottom-24 px-6 py-3 bg-red-500/20 border border-red-500/50 rounded-full text-red-400 font-bold"
+            onClick={stopRecording}
+            className="absolute bottom-24 px-8 py-4 bg-emerald-500 rounded-full text-white font-bold flex items-center gap-2"
           >
-            取消录音
+            <MicOff className="w-5 h-5" /> 停止录音
           </button>
         </div>
       )}
@@ -446,18 +462,16 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
             
             <input value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} placeholder="问我：还能花多少？" className="flex-1 bg-transparent outline-none text-sm font-medium px-2 py-2 text-white placeholder-zinc-600 min-w-0" />
             
-            {/* 网页版语音按钮：按下开始，松开结束 */}
+            {/* 点击式语音按钮 - 适合移动端 */}
             <button 
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
-              disabled={loading || isRecording}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 relative
-                ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white/5 text-zinc-400 hover:bg-white/10'}`}
+              onClick={toggleRecording}
+              disabled={loading}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0
+                ${isRecording 
+                  ? 'bg-red-500 text-white animate-pulse' 
+                  : 'bg-white/5 text-zinc-400 hover:bg-white/10'}`}
             >
-              <Mic className="w-5 h-5" />
+              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
             
             {input.trim() && (
@@ -468,9 +482,9 @@ const AIAssistant: React.FC<Props> = ({ user, transactions, monthlyBudget, onAdd
           </div>
           
           {/* 语音提示 */}
-          {isRecording && (
+          {!isRecording && (
             <div className="text-center mt-2 text-xs text-zinc-500">
-              松开结束录音，点击"取消录音"按钮可取消
+              点击麦克风开始录音
             </div>
           )}
         </div>
