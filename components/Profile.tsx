@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
   User as UserIcon, Shield, CreditCard, Bell, Smartphone, 
   HelpCircle, LogOut, ChevronRight, MessageCircle, Edit2, 
-  Download, Trash2, Check, X, Loader2 
+  Download, Trash2, Check, X, Loader2, Moon, Sun 
 } from 'lucide-react';
 import { User, Transaction } from '../types';
 import { UserService } from '../services/userService';
+import { themeService, ThemeMode } from '../services/themeService';
 
 interface Props {
   user: User;
@@ -37,8 +38,18 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
   const [loading, setLoading] = useState<string | null>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   
-  // 模拟同步设置（真实应用中应存储在 user 对象或单独的 settings 表）
+  // 主题状态
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => themeService.getTheme() === 'dark');
+  
+  // 模拟同步设置
   const [syncEnabled, setSyncEnabled] = useState(true);
+  
+  // 切换主题
+  const toggleTheme = () => {
+    const newTheme = themeService.toggleTheme();
+    setIsDarkMode(newTheme === 'dark');
+    showNotify(newTheme === 'dark' ? '深色模式已开启' : '浅色模式已开启', 'success');
+  };
 
   const handleUpdateNickname = async () => {
     if (!newName.trim() || newName === user.nickname) {
@@ -204,6 +215,19 @@ const Profile: React.FC<Props> = ({ user, onLogout, showNotify, transactions, on
               icon={<span className="text-amber-400">🔑</span>} 
               label="阿里云千问 API Key" 
               sub="文字对话 + 拍照识别 (统一接口)"
+            />
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.2em] mb-4 px-2">外观</h3>
+          <div className="space-y-3">
+            <SettingsItem 
+              onClick={toggleTheme}
+              icon={isDarkMode ? <Moon className="text-indigo-400" /> : <Sun className="text-amber-400" />} 
+              label={isDarkMode ? "深色模式" : "浅色模式"} 
+              sub={isDarkMode ? "已开启" : "已开启"} 
+              active={isDarkMode}
             />
           </div>
         </section>

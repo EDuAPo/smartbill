@@ -25,6 +25,7 @@ import Auth from './components/Auth';
 import { Transaction, CategoryType, User } from './types';
 import { SmartBillAI } from './services/geminiService';
 import { soundManager } from './utils/sounds';
+import { themeService } from './services/themeService';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -165,7 +166,21 @@ const AppContent: React.FC = () => {
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
+    // 保存到通用存储
     localStorage.setItem('smartbill_user', JSON.stringify(newUser));
+    // 关键：同时保存到手机号专属存储，实现永久保存
+    if (newUser.phone) {
+      localStorage.setItem(`smartbill_user_${newUser.phone}`, JSON.stringify(newUser));
+    }
+  };
+  
+  // 处理用户信息更新 - 确保同步到手机号专属存储
+  const handleUserUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('smartbill_user', JSON.stringify(updatedUser));
+    if (updatedUser.phone) {
+      localStorage.setItem(`smartbill_user_${updatedUser.phone}`, JSON.stringify(updatedUser));
+    }
   };
 
   const handleLogout = () => {
@@ -287,6 +302,11 @@ const AppContent: React.FC = () => {
       showNotify("相机权限被拒绝", "error");
     }
   };
+
+  // 初始化主题
+  useEffect(() => {
+    themeService.init();
+  }, []);
 
   // Listen for custom event from Dashboard to open add transaction
   useEffect(() => {
@@ -513,7 +533,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<Dashboard user={user} transactions={transactions} monthlyBudget={monthlyBudget} onConfirm={(id) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, needConfirmation: false } : t))} onDelete={(id) => setTransactions(prev => prev.filter(t => t.id !== id))} showNotify={showNotify} />} />
           <Route path="/reports" element={<Reports transactions={transactions} monthlyBudget={monthlyBudget} setMonthlyBudget={setMonthlyBudget} showNotify={showNotify} />} />
           <Route path="/ai" element={<AIAssistant user={user} transactions={transactions} monthlyBudget={monthlyBudget} onAdd={addTransaction} showNotify={showNotify} />} />
-          <Route path="/profile" element={<Profile user={user} transactions={transactions} onLogout={handleLogout} onUserUpdate={setUser} showNotify={showNotify} />} />
+          <Route path="/profile" element={<Profile user={user} transactions={transactions} onLogout={handleLogout} onUserUpdate={handleUserUpdate} showNotify={showNotify} />} />
         </Routes>
       </main>
 

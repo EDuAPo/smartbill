@@ -9,7 +9,7 @@ export class UserService {
   }
 
   /**
-   * 更新用户信息
+   * 更新用户信息 - 永久保存到手机号专属存储
    */
   async updateProfile(updates: Partial<User>): Promise<User> {
     const saved = localStorage.getItem('smartbill_user');
@@ -21,7 +21,14 @@ export class UserService {
     // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 800));
     
+    // 保存到通用存储
     localStorage.setItem('smartbill_user', JSON.stringify(updatedUser));
+    
+    // 关键：同时保存到手机号专属存储，实现永久保存
+    if (currentUser.phone) {
+      localStorage.setItem(`smartbill_user_${currentUser.phone}`, JSON.stringify(updatedUser));
+    }
+    
     return updatedUser;
   }
 
